@@ -1,88 +1,83 @@
 "use strict";
 // jshint browser:true, devel: true
 
-var $ = document.querySelectorAll.bind(document);
+var $ = document.querySelector.bind(document);
+var $$ = document.querySelectorAll.bind(document);
 
-function sendData(url, method, data) {
+
+function sendData(method, url, data) {
     return new Promise((resolve, reject) => {
-        var XHR = new XMLHttpRequest();
-
-        XHR.addEventListener("load", function(event) {
-            resolve(event.target.responseText);
-        });
-        XHR.addEventListener("error", function(event) {
-            reject(event);
-        });
-        XHR.open(method, url);
-        XHR.send(data);
+        var xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.onload = function() {
+            resolve(JSON.parse(xhr.response));
+        };
+        xhr.onerror = function(err) {
+            reject(err);
+        };
+        xhr.send(data);
     });
 }
 
-function postData(url, data) {
-    return sendData(url, 'POST', data);
-}
+var getData = sendData.bind(null, 'GET');
+var postData = sendData.bind(null, 'POST');
+var putData = sendData.bind(null, 'PUT');
+var deleteData = sendData.bind(null, 'DELETE');
 
-function getData(url, data) {
-    return sendData(url, 'GET', data);
-}
 
-// function putData(url, data) {
-//     return sendData(url, 'PUT', data);
+// function login(user, password) {
+//     return sendData(`/user/`);
 // }
 
-// function deleteData(url, data) {
-//     return sendData(url, 'DELETE', data);
+// function getProjects() {
+//     return getData('/project');
 // }
 
-function login(user, password) {
-    return sendData(`/user/`);
-}
 
-function getProjects() {
-    return getData('/project');
-}
+var PROJECTID, FILEID, LINEID;
 
 /*
-
-xxxx/
-
-xxxx/AiryFairy
-
-xxxx/AiryFairy/ss527aa01.sjsx
-
-xxxx/AiryFairy/ss527aa01.sjsx#L1212
-
+/
+/AiryFairy
+/AiryFairy/ss527aa01.sjsx
+/AiryFairy/ss527aa01.sjsx#L1212
 */
-
-function getFiles(projectId) {
-    return getData(`/project/${projectId}`);
+function parseURL() {
+    var urls = location.pathname.split('/');
+    PROJECTID = urls[1];
+    FILEID = urls[2];
+    LINEID = location.hash.slice(2);
 }
 
-function getLines(projectId, fileId) {
-    return getData(`/project/${projectId}/file/${fileId}`);
-}
+// function getFiles(projectId) {
+//     return getData(`/project/${projectId}`);
+// }
 
-function getTransLines(projectId, fileId, lineId) {
-    return getData(`/project/${projectId}/file/${fileId}/line/${lineId}`);
-}
+// function getLines(projectId, fileId) {
+//     return getData(`/project/${projectId}/file/${fileId}`);
+// }
 
-function putTransLines(projectId, fileId, lineId, text, userId) {
-    return putData(`/project/${projectId}/file/${fileId}/line/${lineId}`, {
-        userId: userId,
-        text: text
-    });
-}
+// function getTransLines(projectId, fileId, lineId) {
+//     return getData(`/project/${projectId}/file/${fileId}/line/${lineId}`);
+// }
 
-window.addEventListener("load", function () {
+// function putTransLines(projectId, fileId, lineId, text, userId) {
+//     return putData(`/project/${projectId}/file/${fileId}/line/${lineId}`, {
+//         userId: userId,
+//         text: text
+//     });
+// }
 
-  // We need to access the form element
-  var form = document.getElementById("myForm");
+// window.addEventListener("load", function () {
 
-  // to takeover its submit event.
-  form.addEventListener("submit", function (event) {
-    event.preventDefault();
-        var FD  = new FormData(form);
-    sendData();
-  });
-});
+//   // We need to access the form element
+//   var form = document.getElementById("myForm");
+
+//   // to takeover its submit event.
+//   form.addEventListener("submit", function (event) {
+//     event.preventDefault();
+//         var FD  = new FormData(form);
+//     sendData();
+//   });
+// });
 

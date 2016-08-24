@@ -1,0 +1,110 @@
+
+body {
+    display: flex;
+}
+
+.left {
+    width: 75vw;
+    height: 100vh;
+}
+
+.right {
+    width: 25vw;
+    height: 100vh;
+    background: black;
+}
+
+article {
+    width: 100%;
+    height: 100vh;
+    margin: 0 auto;
+    // overflow-x: hidden;
+    overflow-y: scroll;
+
+    font-size: 1em;
+    text-rendering: optimizeLegibility;
+}
+
+section {
+    margin-bottom: 0.5em;
+}
+
+section:hover {
+    // outline: 1px solid rgb(228,88,241);
+    background: rgba(228,88,241,0.7);
+}
+
+section:target{
+
+}
+
+.container {
+    // outline: 1px solid red;
+
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: stretch;
+}
+
+.container > div {
+    width: 29em;
+
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: stretch;
+
+    padding: 0.3em;
+    border-radius: 0.4em;
+    border-width: 1px;
+    border-color: rgb(228,88,241);
+    border-style: solid;
+    // text-shadow: 0 1px white;
+}
+
+
+.editor {
+    outline: 1px solid purple;
+
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: auto;
+
+    // height: 80px;
+    width: 50em;
+    padding: 1em;
+    padding-bottom: 0;
+}
+
+.editor .original,
+.editor .translated {
+    display: flex;
+}
+
+.editor .transtext {
+    border-radius: 0.4em;
+    border-width: 1px;
+    border-color: rgb(228,88,241);
+    border-style: solid;
+
+    width: 30em;
+}
+
+.editor .fold {
+    background: blue;
+    text-align: center;
+    height: 0.5em;
+    font-size: 0.5em;
+}
+
+
+.anchor {
+    position:relative;
+    top: -200px; /* or whatever value you need */
+    display: block;
+}
+
+.selected {
+    background: red;
+}
