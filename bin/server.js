@@ -3,8 +3,7 @@
 const hapi = require('hapi');
 const hat = require('hat');
 
-const data = require('./lib/data.js');
-
+const data = require('../lib/database.js');
 
 const appName = 'hanz';
 
