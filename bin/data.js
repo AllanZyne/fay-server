@@ -1,12 +1,28 @@
 "use strict";
 
 const fs = require('fs');
-const crypto = require('crypto');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 
 const { async, access } = require('../lib/async.js');
 const database = require('../lib/database.js');
 
+
+function hashPassword(data) {
+    return new Promise((resolve, reject) => {
+        bcrypt.genSalt(10, function(err, salt) {
+            if (! err)
+                bcrypt.hash(data, salt, function(err, hash) {
+                    if (! err)
+                        resolve(hash);
+                    else
+                        reject(err);
+                });
+            else
+                reject(err);
+        });
+    });
+}
 
 /*
 
@@ -23,24 +39,27 @@ user-list [USERID]
 */
 
 let user = async(function*(cmd, cmdArgs) {
-    let db = yield database.connect().catch(err => { throw err;});
+    let db = yield database.connect().catch(err => { throw err; });
     let result;
 
     if (cmd[1] == 'add') {
         let [userId, name, password, type] = cmdArgs;
         if (! (userId && name && password && type))
             help(cmd);
-        result = yield database.user_add(db, name, password, type).catch(err => { throw err;});
+        password = yield hashPassword(password);
+        result = yield database.user_add(db, userId, name, password, type).catch(err => { throw err; });
     } else if (cmd[1] == 'remove') {
         let [ userId ] = cmdArgs;
         if (! userId)
             help(cmd);
-        result = yield database.user_delete(db, userId).catch(err => { throw err;});
+        result = yield database.user_delete(db, userId).catch(err => { throw err; });
     } else if (cmd[1] == 'list') {
         let [ userId ] = cmdArgs;
-        result = yield database.user_list(db, userId).catch(err => { throw err;});
+        result = yield database.user_list(db, userId).catch(err => { throw err; });
     }
 
+    result.connection = undefined;
+    result.message = undefined;
     console.log(result);
 
     return yield db.close();
@@ -56,26 +75,28 @@ let user = async(function*(cmd, cmdArgs) {
 //
 var proj = async(function*() {
     let db = yield database.connect().catch(err => { throw err;});
-    let result;
+    // let result;
 
-    if (cmd[1] == 'add') {
-        let [userId, name, password, type] = cmdArgs;
-        if (! (userId && name && password && type))
-            help(cmd);
-        result = yield database.user_add(db, name, password, type).catch(err => { throw err;});
-    } else if (cmd[1] == 'remove') {
-        let [ userId ] = cmdArgs;
-        if (! userId)
-            help(cmd);
-        result = yield database.user_delete(db, userId).catch(err => { throw err;});
-    } else if (cmd[1] == 'list') {
-        let [ userId ] = cmdArgs;
-        result = yield database.user_list(db, userId).catch(err => { throw err;});
-    } else {
-        help(cmd);
-    }
+    // if (cmd[1] == 'add') {
+    //     let [userId, name, password, type] = cmdArgs;
+    //     if (! (userId && name && password && type))
+    //         help(cmd);
+    //     console.log('tt', type);
+    //     // result = yield database.user_add(db, userId, name, password, type)
+    //     //     .catch(err => { throw err; });
+    // } else if (cmd[1] == 'remove') {
+    //     let [ userId ] = cmdArgs;
+    //     if (! userId)
+    //         help(cmd);
+    //     result = yield database.user_delete(db, userId).catch(err => { throw err;});
+    // } else if (cmd[1] == 'list') {
+    //     let [ userId ] = cmdArgs;
+    //     result = yield database.user_list(db, userId).catch(err => { throw err;});
+    // } else {
+    //     help(cmd);
+    // }
 
-    console.log(result);
+    // console.log(result);
 
     return yield db.close();
 });
