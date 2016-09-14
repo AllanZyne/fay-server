@@ -1,28 +1,31 @@
 "use strict";
 
+const bcrypt = require('bcryptjs');
+
 const hapi = require('hapi');
-const hat = require('hat');
+const hapi_token = require('hapi-auth-bearer-token');
+const hapi_inert = require('inert');
+const hapi_good = require('good');
+const Boom = require('boom');
 
 const data = require('../lib/database.js');
+const { async } = require('../lib/async.js');
+const { newToken, checkToken, updateToken, deleteToken } = require('../lib/token.js');
+
 
 const appName = 'hanz';
 
 const server = new hapi.Server();
 server.connection({ port: 3000 });
 
+let DB = null;
 
-server.state(`${appName}-data`, {
-    ttl: null,
-    isSecure: true,
-    isHttpOnly: true,
-    encoding: 'base64json',
-    clearInvalid: false, // remove invalid cookies
-    strictHeader: true // don't allow violations of RFC 6265
-});
+
 
 server.register([
-    require('inert'), {
-    register: require('good'),
+    hapi_inert,
+    hapi_token, {
+    register: hapi_good,
     options: {
         reporters: {
             console: [{
@@ -42,28 +45,44 @@ server.register([
         throw err; // something bad happened loading the plugin
     }
 
-    let DB = null;
+    server.auth.strategy('default', 'bearer-access-token', 'required', {
+        allowQueryToken: true,
+        allowMultipleHeaders: false,
+        accessTokenName: 'token',
+        validateFunc: function (token, callback) {
+            console.log('validateFunc', token);
+            // let request = this;
+            callback(null, checkToken(token), {});
+        }
+    });
 
-    // 登陆界面 || 项目列表
     server.route({
         method: 'GET',
         path: '/{p*}',
         handler: function(request, reply) {
-            console.log('<root>', request.state);
+            console.log('<404>');
+            return reply.file('public/404.html');
+        },
+        config: {
+            auth: false,
+        }
+    });
+
+    server.route({
+        method: 'GET',
+        path: '/',
+        handler: function(request, reply) {
             console.log('<root>', request.query);
-            // if (request.state.token) {
-            //     return reply.file('public/index.html');
-            // } else {
-            //     return reply.file('public/login.html');
-            // }
+            let token = request.query.token;
+            if (! token)
+                return reply.file('public/login.html');
+            if (! checkToken(token))
+                return reply.file('public/login.html');
             return reply.file('public/index.html');
         },
-        // config: {
-        //     state: {
-        //         parse: true,        // parse and store in request.state
-        //         failAction: 'error' // may also be 'ignore' or 'log'
-        //     }
-        // }
+        config: {
+            auth: false,
+        }
     });
 
     server.route({
@@ -72,6 +91,9 @@ server.register([
         handler: function(request, reply) {
             // console.log('assets', request.params);
             return reply.file('public/favicon.ico');
+        },
+        config: {
+            auth: false,
         }
     });
 
@@ -81,6 +103,9 @@ server.register([
         handler: function(request, reply) {
             return reply.file('public/' + request.params.file);
         },
+        config: {
+            auth: false,
+        }
     });
 
     server.route({
@@ -89,6 +114,9 @@ server.register([
         handler: function(request, reply) {
             // console.log(encodeURIComponent(request.params.file));
             return reply.file('public/' + request.params.file);
+        },
+        config: {
+            auth: false,
         }
     });
 
@@ -98,12 +126,16 @@ server.register([
 
     server.route({
         method: 'GET',
-        path: '/api',
+        path: '/api/{p*}',
         handler: function(request, reply) {
-            // console.log('api', request.params);
             return reply({
-                'documentation_url': null
+                'documentation_url': {
+                    'error': 'unknown api'
+                }
             });
+        },
+        config: {
+            auth: false,
         }
     });
 
@@ -113,9 +145,15 @@ server.register([
         method: 'GET',
         path: '/api/authenticate',
         handler: function(request, reply) {
-            console.log('api', request.params);
-            console.log('api', request.query);
-            return reply({ token: hat() });
+            // console.log('api/authenticate', request.params);
+            // console.log();
+            console.log('api/authenticate', request.query);
+            let username = request.query.username,
+                password = request.query.password;
+            reply(login(DB, username, password));
+        },
+        config: {
+            auth: false,
         }
     });
 
@@ -124,14 +162,9 @@ server.register([
         path: '/api/project/{projectId?}',
         handler: function(request, reply) {
             // console.log('api/project', request.params);
-            // console.log('api/project', request.query);
+            console.log('api/project', request.query);
             let projectId = parseInt(request.params.projectId);
-
-            if (isNaN(projectId)) {
-                reply(data.project_list(DB));
-            } else {
-                reply(data.project_list(DB, projectId));
-            }
+            return reply(data.project_list(DB, isNaN(projectId) ? undefined : projectId));
         }
     });
 
@@ -201,83 +234,32 @@ server.register([
 
 });
 
+var bcrypt_compare = function(data1, data2) {
+    return new Promise((resolve, reject) => {
+        // console.log('bcrypt_compare', data1,data2);
+        bcrypt.compare(data1, data2, function(err, valid) {
+            if (err)
+                reject(err);
+            else
+                resolve(valid);
+        });
+    });
+};
+
 // 登录
-
-// 文件的语句列表（内容，状态）
-
-// 编辑语句（原句，新句）
-
-// let server = http.createServer();
-
-// server.listen(8080);
-
-// server.on('request', function(request, response) {
-//     let headers = request.headers;
-//     let method = request.method;
-//     let url = path.normalize(request.url);
-
-//     // console.log('headers', headers);
-//     console.log('method', method);
-//     console.log('url', url);
-
-//     let body = [];
-//     request.on('error', function(err) {
-//         console.error(err);
-//     }).on('data', function(chunk) {
-//         body.push(chunk);
-//     }).on('end', function() {
-//         body = Buffer.concat(body).toString();
-
-//         if (url.match(/^\/((css|js)\/.+)?$/g))
-//             staticFiles(url, response);
-//         else if (url == '/login') {
-//             login();
-//         }
-//     });
-// });
-
-// server.on('error', function(err) {
-//   // This prints the error message and stack trace to `stderr`.
-//   console.error(err.stack);
-// });
-
-// function login(request, response) {
-//     let name = request.name;
-//     fs.readFile('data/users.json', (err, data) => {
-//         if (err)
-//             throw err;
-//         let users = JSON.parse(data.toString());
-//         let findUser = null;
-//         for (let user of users) {
-//             if (user.name == name) {
-//                 findUser = user;
-//                 break;
-//             }
-//         }
-//         if (findUser) {
-
-//         } else {
-
-//         }
-//     });
-// }
-
-// // 项目的文件列表（文件名；汉化完成度；状态（锁定、编辑、审核））
-// function hanzFileList() {
-//     let files = fs.readdir('proj/AiryFairy');
-
-// }
-
-// // 汉化文件（语句id；原句；翻译）
-// function hanzLineList() {
-
-// }
-
-// function staticFiles(url, response) {
-//     var filePath = url.slice(1);
-//     if (! filePath.length)
-//         filePath = 'client.html';
-//     console.log('static files', filePath);
-//     var readable = fs.createReadStream(filePath);
-//     readable.pipe(response);
-// }
+var login = async(function*(db, user, password) {
+    console.log('login', user, password);
+    let userData = yield data.user_list(db, user).catch(err => { throw err; });
+    // console.log('login userData', userData);
+    if (! userData.length)
+        return Boom.unauthorized('invalid username');
+    let valid = yield bcrypt_compare(password, userData[0].password).catch(err => { throw err; });
+    // console.log('login valid', valid);
+    if (! valid)
+        return Boom.unauthorized('invalid password');
+    let token = newToken();
+    console.log('login token', token);
+    return {
+        token: token
+    };
+});
