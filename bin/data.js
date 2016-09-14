@@ -8,6 +8,8 @@ const { async, access } = require('../lib/async.js');
 const database = require('../lib/database.js');
 
 
+let verbose = true;
+
 function hashPassword(data) {
     return new Promise((resolve, reject) => {
         bcrypt.genSalt(10, function(err, salt) {
@@ -62,43 +64,56 @@ let user = async(function*(cmd, cmdArgs) {
     result.message = undefined;
     console.log(result);
 
-    return yield db.close();
+    yield db.close();
 });
 
 
 // 项目管理
 //
-// proj-add name PATH
-// proj-remove name
-// proj-update name
-// proj-list name
+// proj-add PROJNAME PATH
+// proj-remove PROJNAME
+// proj-update PROJNAME
+// proj-list PROJNAME
 //
 var proj = async(function*() {
-    let db = yield database.connect().catch(err => { throw err;});
-    // let result;
+    if (verbose)
+        console.warn('connect to database...');
 
-    // if (cmd[1] == 'add') {
-    //     let [userId, name, password, type] = cmdArgs;
-    //     if (! (userId && name && password && type))
-    //         help(cmd);
-    //     console.log('tt', type);
-    //     // result = yield database.user_add(db, userId, name, password, type)
-    //     //     .catch(err => { throw err; });
-    // } else if (cmd[1] == 'remove') {
-    //     let [ userId ] = cmdArgs;
-    //     if (! userId)
-    //         help(cmd);
-    //     result = yield database.user_delete(db, userId).catch(err => { throw err;});
-    // } else if (cmd[1] == 'list') {
-    //     let [ userId ] = cmdArgs;
-    //     result = yield database.user_list(db, userId).catch(err => { throw err;});
-    // } else {
-    //     help(cmd);
-    // }
+    let db = yield database.connect().catch(err => { throw err; });
+    let result;
 
-    // console.log(result);
+    if (verbose)
+        console.warn('connected...');
 
-    return yield db.close();
+    if (cmd[1] == 'add') {
+        let [name, providerPath] = cmdArgs;
+        if (! (name && path))
+            help(cmd);
+        if (! path.isAbsolute(providerPath))
+            providerPath = path.join(process.cwd(), providerPath);
+        console.log('project add', name, providerPath);
+        let provider = require(path.join(providerPath, '_.js'));
+        result = yield database.project_add(db, name, provider, { verbose: true }).catch(err => { throw err; });
+    } else if (cmd[1] == 'remove') {
+        let [ name ] = cmdArgs;
+        if (! name)
+            help(cmd);
+        console.log('project remove', name);
+        result = yield database.project_delete(db, name).catch(err => { throw err;});
+    } else if (cmd[1] == 'list') {
+        let [ name ] = cmdArgs;
+        console.log('project list', name);
+        result = yield database.project_list(db, name).catch(err => { throw err;});
+    } else {
+        help(cmd);
+    }
+
+    if (verbose) {
+        console.warn('!!result');
+        console.dir(result, {colors:true});
+    }
+
+    yield db.close();
 });
 
 
@@ -106,12 +121,23 @@ var proj = async(function*() {
 function help(cmd) {
     if (! cmd) {
         console.log();
-        console.log('Usage: node data.js <CMD>');
+        console.log('Usage: node data.js <cmd> [...]');
         console.log();
-        console.log('where <CMD> is one of:');
-        console.log('user, proj');
+        console.log('PROJECT');
+        console.log('-----------------------------------');
+        console.log('proj-add PROJNAME PATH');
+        console.log('proj-remove PROJNAME');
+        console.log('proj-update PROJNAME');
+        console.log('proj-list PROJNAME');
         console.log();
-        console.log('npm <CMD> -h  quck help on <CMD>');
+        console.log('USER');
+        console.log('-----------------------------------');
+        console.log('user-add USERID NAME PASSWORD TYPE');
+        console.log('user-remove USERID');
+        console.log('user-update USERID [-p PASSWORD] [-t TYPE]');
+        console.log('user-list [USERID]');
+        console.log();
+        console.log('npm <cmd> -h  quck help on <cmd>');
         console.log();
     } else {
         console.log('Help:', cmd);
