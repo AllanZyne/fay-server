@@ -99,7 +99,7 @@ var proj = async(function*() {
         if (! name)
             help(cmd);
         console.log('project remove', name);
-        result = yield database.project_delete(db, name).catch(err => { throw err;});
+        result = yield database.project_remove(db, name).catch(err => { throw err;});
     } else if (cmd[1] == 'list') {
         let [ name ] = cmdArgs;
         console.log('project list', name);
