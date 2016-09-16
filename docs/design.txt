@@ -7,8 +7,7 @@ file_id name lock
 0x000
 line_id trans_id content lock
 
-0x0
-tran_id user_id content ctime
+trans_id commits[user_id content ctime]
 
 
 proj_id = proj_index
@@ -17,55 +16,8 @@ line_id = file_id << 12 + line_index
 tran_id = liine_id << 4 + tran_id
 
 
-C 创建：
 
-db.projects.insertMany([ {
-    _id: 0,
-    name: "",
-    lineCount: null,
-    transCount: null } ], { ordered: false })
+做一些快捷键
 
-db.files.insertMany([], {})
-
-db.lines.insertMany()
-
-db.trans.insertMany()
-
-
-R 查询：
-
-# 全部项目
-db.projects.find()
-
-# 项目的全部文件
-proj_id = proj_index
-db.files.find( { _id: { $gt: proj_id << 8, $lt: (proj_id << 8) & 0xff } } )
-
-# 文件的全部行
-file_id = proj_index << 8 + file_index
-db.lines.find( { _id: { $gt: file_id << 12, $lt: (file_id << 12) & 0xfff } } )
-db.trans.find( { _id: line.trans_id )
-
-# 行的所有翻译
-line_id = file_id << 12 + line_index
-db.trans.find( { _id: { $gt: line_id << 4, $lt: (line_id) << 4 & 0xf } } )
-
-
-
-
-增加：
-
-
-
-
-删除：
-
-
-
-查询：
-
-
-
-
-
+j k  上下
 
