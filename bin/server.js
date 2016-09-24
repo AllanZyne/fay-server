@@ -203,7 +203,13 @@ server.register([ hapi_inert, hapi_cookie, {
         handler: function(request, reply) {
             let projectId = decodeURI(request.params.projectId),
                 options = request.query;
-            return reply(database.project_list(DB, projectId, options));
+
+            console.log('[credentials]', request.auth.credentials);
+
+            database.project_list(DB, projectId, options).then(
+                result => reply(result),
+                err    => reply(Boom.wrap(err))
+            );
         }
     });
 
@@ -214,7 +220,11 @@ server.register([ hapi_inert, hapi_cookie, {
             let projectId = decodeURI(request.params.projectId),
                 fileId = decodeURI(request.params.fileId),
                 options = request.query;
-            return reply(database.files_list(DB, projectId, fileId, options));
+
+            database.files_list(DB, projectId, fileId, options).then(
+                result => reply(result),
+                err    => reply(Boom.wrap(err))
+            );
         }
     });
 
@@ -228,20 +238,23 @@ server.register([ hapi_inert, hapi_cookie, {
                 options = request.query;
 
             lineId = checkLineId(lineId);
-            if (Boom.isBoom(lineId))
+            if (lineId && lineId.isBoom)
                 return reply(lineId);
 
             options = checkLineOptions(options);
-            if (Boom.isBoom(options))
+            if (options.isBoom)
                 return reply(options);
 
-            return reply(database.lines_list(DB, projectId, fileId, lineId, options));
+            database.lines_list(DB, projectId, fileId, lineId, options).then(
+                result => reply(result),
+                err    => reply(Boom.wrap(err))
+            );
         }
     });
 
     server.route({
         method: 'GET',
-        path: '/api/project/{projectId}/file/{fileId}/line/{lineId}/translines',
+        path: '/api/project/{projectId}/file/{fileId}/transline/{lineId?}',
         handler: function(request, reply) {
             let projectId = decodeURI(request.params.projectId),
                 fileId = decodeURI(request.params.fileId),
@@ -249,14 +262,46 @@ server.register([ hapi_inert, hapi_cookie, {
                 options = request.query;
 
             lineId = checkLineId(lineId);
-            if (Boom.isBoom(lineId))
+            if (lineId && lineId.isBoom)
                 return reply(lineId);
 
             options = checkLineOptions(options);
-            if (Boom.isBoom(options))
+            if (options.isBoom)
                 return reply(options);
 
-            return reply(database.trans_list(DB, projectId, fileId, lineId, options));
+            database.trans_list(DB, projectId, fileId, lineId, options).then(
+                result => reply(result),
+                err    => reply(Boom.wrap(err))
+            );
+        }
+    });
+
+    server.route({
+        method: 'POST',
+        path: '/api/project/{projectId}/file/{fileId}/transline/{lineId?}',
+        handler: function(request, reply) {
+            let user = request.auth.credentials;
+            if (user.type > 1) {
+                return reply(Boom.illegal("your account is not permitted to commit"));
+            }
+
+            let projectId = decodeURI(request.params.projectId),
+                fileId = decodeURI(request.params.fileId),
+                lineId = decodeURI(request.params.lineId);
+
+            console.log('/api/transline', request.params);
+
+            lineId = checkLineId(lineId);
+            if (typeof lineId !== 'number')
+                return reply(Boom.badRequest("lineId is wrong"));
+
+            // XXXX: 检查是否有恶意代码！！
+            let text = request.payload;
+            if (typeof text !== 'string')
+                return reply(Boom.badRequest("payload data format is wrong"));
+            console.log('/api/transline', text);
+
+            return reply(database.trans_add(DB, projectId, fileId, lineId, text, user._id));
         }
     });
 
@@ -330,7 +375,7 @@ function authenticate(request, reply) {
 }
 
 function checkLineId(lineId) {
-    if (lineId === undefined || lineId === null)
+    if (! lineId)
         return;
 
     lineId = parseInt(lineId);
