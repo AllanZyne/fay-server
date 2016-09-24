@@ -1,90 +1,187 @@
 
-/*
+// var PROJECTID = 'AiryFairy';
+// var FILEID = 'ss527aa01.sjsx';
+// var LINEID;
 
+function commitClick(event) {
+    console.log('commitClick');
 
-!!!!
+    let text = $('.input textarea').value;
+    let speeker = $('.line-editor .line.original .speeker');
+    if (speeker) {
+        speeker = speeker.textContent;
+        text = speeker + '　' + text;
+    }
 
-登陆流程！
+    console.log('commitClick', text);
 
-
-
-*/
-
-
-
-
-PROJECTID = 1;
-FILEID = 1;
-
-
-
+    $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${LINEID.slice(1)}`, text).then(
+        result => console.log(result),
+        err    => console.log(err)
+    );
+}
 
 function lineClick(event) {
     console.log('lineClick');
 
-    let oSpeeker = this.querySelector('.original .speeker').textContent,
-        tSpeeker = this.querySelector('.translated .speeker').textContent,
-        text = this.querySelector('.text').textContent,
-        transtext = this.querySelector('.transtext').textContent;
+    if (this.classList.contains('lock'))
+        return;
 
-    $('dialog.editor .original .speeker').textContent = oSpeeker;
-    $('dialog.editor .translated .speeker').textContent = tSpeeker;
-    $('dialog.editor .text').textContent = text;
-    $('dialog.editor .transtext').textContent = transtext;
-
-    location.hash = '#L' + this.dataset.line_number;
+    let others = $$('.line-wrapper.selected');
+    for (let other of others) {
+        other.classList.remove('selected');
+    }
     this.classList.add('selected');
-    // $('dialog.editor').showModal();
+
+    LINEID = this.id;
+
+    let editor = $('main .line-editor');
+    editor.innerHTML = this.outerHTML;
+    editor.style.display = 'block';
+
+    let transline = editor.querySelector('.line.translated .text');
+    let transtext = transline.textContent;
+
+    transline.classList.add('input');
+    transline.innerHTML = '<textarea>' + transtext + '</textarea>' +
+    '<div class="pannel">' +
+        '<button class="blue">取消</button>' +
+        '<button class="yellow">历史</button>' +
+        '<button class="green" id="commit">提交</button>' +
+    '</div>';
+
+    let commit = transline.querySelector('#commit');
+    commit.addEventListener('click', commitClick);
 }
 
-$('dialog.editor .close').addEventListener('click', function(event) {
-    $('dialog.editor').close();
-});
+
+const LinePerPage = 30;
+let LinePage = 0, LineIndex = 0;
+let LineLoading = false, LineEnd = false;
+let ScrollTicking = false;
 
 
-function getLines() {
-    let article = $('article');
-    article.innerHTML = '';
-    getData(`/api/project/${PROJECTID}/file/${FILEID}/line`).then((data) => {
-        for (let i in data) {
-            let line = data[i];
-            let texts = line.text.split('　');
-            let transtext = '　';
-            if (line.transtext) {
-                let transtexts = line.transtext.split('　');
-                if (transtexts.length == 2)
-                    transtext = transtexts[1];
-                else
-                    transtext = line.transtext;
-            }
-// <a class="anchor" name="L${i}">&nbsp;</a>
-            let content =
-`
-<div class="container">
-  <div class="original">
-    <div class="speeker">${texts.length == 2 ? texts[0] : ''}</div>
-    <div class="text">${texts.length == 2 ? texts[1] : texts[0]}</div>
-  </div>
-  <div class="translated">
-    <div class="speeker">${texts.length == 2 ? texts[0] : ''}</div>
-    <div class="transtext">${transtext}</div>
-  </div>
-</div>`;
-            let section = document.createElement('section');
-            section.id = `LC${i}`;
-            section.dataset.line_number = i;
-            section.innerHTML = content;
-            section.addEventListener('click', lineClick, true);
+function updateScroll(event) {
+    var element = event.target;
+    var a = element.scrollTop;
+    var b = element.scrollHeight - element.clientHeight;
+    // console.log('scroll', a/b);
+    if (a == b) {
+        getLineData();
+    }
+}
 
-            let anchor = document.createElement('a');
-            anchor.name = `L${i}`;
-            anchor.className = 'anchor';
-            anchor.textContent = ' ';
-            article.appendChild(anchor);
+function articalScroll(event) {
+    if (! ScrollTicking) {
+        ScrollTicking = true;
+        window.requestAnimationFrame(function() {
+            updateScroll(event);
+            ScrollTicking = false;
+        });
+    }
+}
 
-            article.appendChild(section);
+
+function getLineData() {
+    console.log('getLineData', LineLoading);
+    if (LineEnd || LineLoading)
+        return;
+
+    let article = $('main article');
+    LineLoading = true;
+
+    Promise.all([
+        getData(`/api/project/${PROJECTID}/file/${FILEID}/line`, {
+            page: LinePage,
+            per_page: LinePerPage
+        }),
+        getData(`/api/project/${PROJECTID}/file/${FILEID}/transline?page=${LinePage}`, {
+            page: LinePage,
+            per_page: LinePerPage
+        })
+    ]).then(([lines, translines]) => {
+        // console.log(lines);
+        // console.log('translines', translines);
+
+        if (lines.length < LinePerPage) {
+            LineEnd = true;
         }
+
+        for (let i = 0, len = lines.length; i < len; i++) {
+            let line = lines[i], trans = translines[i].commits;
+            let text = line.text,
+                transText = text;
+            if (trans.length > 0) {
+                transText = trans[trans.length - 1].text;
+            }
+
+            let speeker = '', tranSpeeker = '';
+            let m = text.indexOf('　');
+            if (m > 0) {
+                speeker = tranSpeeker = text.slice(0, m);
+                text = text.slice(m+1);
+            }
+            m = transText.indexOf('　');
+            if (m > 0) {
+                transText = transText.slice(m+1);
+            }
+
+            let lineWrapper = document.createElement('div');
+
+            lineWrapper.id = 'L'+LineIndex;
+            LineIndex++;
+
+            lineWrapper.classList.add('line-wrapper');
+            if (line.lock)
+                lineWrapper.classList.add('lock');
+            if (trans.length)
+                lineWrapper.classList.add('translated');
+
+            lineWrapper.innerHTML = '<div class="line original">' +
+                (speeker.length ? `<p class="speeker">${speeker}</p>`:'') +
+                `<p class="text">${text}</p>` +
+            '</div>' +
+            '<div class="line translated">' +
+                (tranSpeeker.length ? `<p class="speeker">${tranSpeeker}</p>`:'') +
+                `<p class="text">${transText}</p>` +
+            '</div>';
+
+            lineWrapper.addEventListener('click', lineClick);
+
+            article.appendChild(lineWrapper);
+        }
+
+        LinePage++;
+        LineLoading = false;
+    }, err => {
+        console.log(err);
     });
 }
 
-getLines();
+function getLines() {
+    let main = $('main');
+    main.innerHTML = '<div class="left-wrapper">' +
+        '<article class="left-up center"></article>' +
+        '<div class="left-down line-editor" style="display: none;">' +
+            '<div class="line-wrapper">' +
+                '<div class="line original">' +
+                '</div>' +
+                '<div class="line translated">' +
+                '</div>' +
+            '</div>' +
+        '</div>' +
+    '</div>';
+
+    let article = $('main article');
+    article.addEventListener('scroll', articalScroll);
+
+    let editor = $('main .line-editor');
+
+    LinePage = LineIndex = 0;
+    LineLoading = LineEnd = false;
+    ScrollTicking = false;
+
+    getLineData();
+}
+
+// getLines();

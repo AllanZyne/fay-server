@@ -8,29 +8,73 @@
     <link rel="stylesheet" href="/assets/css/line.css">
   </head>
   <body lang="zh-CN">
-    <div class='left'>
-      <article>
-      </article>
-      <dialog class="editor" open>
-        <form method="dialog">
-          <div class="original">
-            <div class="speeker">エルモ</div>
-            <div class="text">「『……我が名は、エルモ・コスタ』」</div>
+    <main>
+      <div class="left-wrapper">
+        <article class="left-up center">
+          <div class="line-wrapper">
+            <div class="line original">
+              <p class="speeker">エルモ</p>
+              <p class="text">「『……我が名は、エルモ・コスタ』」</p>
+            </div>
+            <div class="line translated">
+              <p class="speeker">Elmo</p>
+              <p class="text">「『……我が名は、エルモ・コスタ』」</p>
+            </div>
           </div>
-          <div class="translated">
-            <div class="speeker">エルモ</div>
-            <div class="transtext" contenteditable>「『……我就是、Elmo Costa』」</div>
+          <div class="line-wrapper">
+            <div class="line original">
+              <p class="speeker">エルモ</p>
+              <p class="text">「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」</p>
+            </div>
+            <div class="line translated">
+              <p class="speeker">Elmo</p>
+              <p class="text">
+              「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」「『……我が名は、エルモ・コスタ』」</p>
+            </div>
           </div>
-          <div class="controls">
-            <div class="close">↓</div>
+          <div class="line-wrapper">
+            <div class="line original">
+              <p class="text">鏡を見ながら跳ね気味の寝癖を軽く潰してみるが、まったく\nもって効果なし。</p>
+            </div>
+            <div class="line translated">
+              <p class="text">照着镜子试着轻轻地整平有种飞跳感觉的头发，可是\n根本没有效果。</p>
+            </div>
           </div>
-        </form>
-      </dialog>
-    </div>
-    <div class="right">
-     <!-- 各种辅助工具（名字表、名词表、字典） -->
-    </div>
-    <script src="/assets/js/index.js"></script>
+          <div class="line-wrapper">
+            <div class="line original">
+              <p class="speeker">コレッ</p>
+              <p class="text">「幼なじみを疑るの？　私はエルのこと、遅れてもちゃんと\n来てくれる……って、信じていたのに？」</p>
+            </div>
+            <div class="line translated">
+              <p class="speeker">Colet</p>
+              <p class="text">「要怀疑青梅竹马么？即使明明我对艾尔，即使迟到也会好好地过来的事\n一直相信着？」</p>
+            </div>
+          </div>
+        </article>
+        <div class="left-down line-editor">
+          <div class="line-wrapper">
+            <div class="line original">
+              <p class="speeker">コレッ</p>
+              <p class="text">「幼なじみを疑るの？　私はエルのこと、遅れてもちゃんと\n来てくれる……って、信じていたのに？」</p>
+            </div>
+            <div class="line translated">
+              <p class="speeker">Colet</p>
+              <div class="text input">
+                  <textarea class="">「要怀疑青梅竹马么？即使明明我对艾尔，即使迟到也会好好地过来的事\n一直相信着？」</textarea>
+                  <div class="pannel">
+                    <button>建议</button>
+                    <button>历史</button>
+                    <button>提交</button>
+                  </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="right-wrapper">asfasfasfd
+      </div>
+    </main>
+    <script src="/assets/js/util.js"></script>
     <script src="/assets/js/line.js"></script>
   </body>
 </html>

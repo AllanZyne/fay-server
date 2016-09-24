@@ -1,87 +1,50 @@
+* {
+    padding: 0;
+    margin: 0;
+    border: 0;
+}
 
-
+html, body {
+    height: 100vh;
+    // overflow: hidden;
+}
 
 body {
-    font-size: 12pt;
-    margin: 0;
-}
+    font-size: 14pt;
 
-.center {
-    position: absolute;
-    top:0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    margin: auto;
-}
-
-.flex-container {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    flex-flow: column nowrap;
+    align-items: stretch;
+    // align-content: stretch;
 }
 
-.flex-item {
+.top {
+    flex-basis: 44px;
+    flex-shrink: 0;
+    flex-grow: 0;
 
+    // background-color: black;
+    // border-bottom: 1px solid;
+    overflow: hidden;
 }
 
-.login {
-    width: 100%;
-    height: 100%;
-    postion: absolute;
+.wrapper {
+    flex-grow: 99999;
 
-    outline: 1px solid black;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+
+    background-color: #fff;
+    overflow: hidden;
 }
 
-.login div {
-    outline: 1px solid black;
+.left-wrapper {
+    width: 75vw;
+    overflow: hidden;
 }
 
-.files {
-
-}
-
-.files table {
-    width: 100%;
-    outline: 1px solid red;
-}
-
-tr {
-    outline: 1px solid lime;
-}
-
-td {
-    outline: 1px solid black;
-}
-
-td:first-child {
-    text-align: left;
-    color: blue;
-}
-
-td:first-child:hover {
-    text-align: left;
-    text-decoration: underline;
-    cursor: pointer;
-}
-
-td:first-child:active {
-    text-align: left;
-    color: red;
-}
-
-td:first-child:visited {
-    text-align: left;
-    color: navy;
-}
-
-td:last-child {
-    text-align: right;
-}
-
-
-.input {
-    width: 400px;
-    height: 30px;
+.right-wrapper {
+    flex-grow: 99999;
+    overflow: hidden;
 }
