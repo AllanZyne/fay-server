@@ -5,9 +5,10 @@ const hat = require('hat');
 
 const hapi = require('hapi');
 const hapi_cookie = require('hapi-auth-cookie');
-
+// const hapi_monitor = require('hapijs-status-monitor');
 const hapi_inert = require('inert');
 const hapi_good = require('good');
+const hapi_nes = require('nes');
 const Boom = require('boom');
 
 const database = require('../lib/database.js');
@@ -24,7 +25,7 @@ let DB = null;
 
 
 
-server.register([ hapi_inert, hapi_cookie, {
+server.register([ hapi_inert, hapi_cookie, hapi_nes, {
     register: hapi_good,
     options: {
         reporters: {
@@ -122,10 +123,16 @@ server.register([ hapi_inert, hapi_cookie, {
         path: '/settings',
         handler: function(request, reply) {
             return reply.file('public/404.html');
-        },
-        // config: {
-        //     auth: false,
-        // }
+        }
+    });
+
+    server.route({
+        method: 'GET',
+        path: '/logout',
+        handler: function(request, reply) {
+            request.cookieAuth.clear();
+            return reply.redirect('/login');
+        }
     });
 
     server.route({
@@ -352,13 +359,13 @@ function authenticate(request, reply) {
     let username = decodeURI(request.query.username),
         password = decodeURI(request.query.password);
     database.user_list(DB, username).then(users => {
+        console.log('[authenticate]', users);
         if (! users.length)
             return reply(Boom.unauthorized('invalid username'));
-        console.log('[authenticate]', users);
         return bcrypt_compare(password, users[0].password).then(valid => {
+            console.log('[authenticate] valid');
             if (! valid)
                 return reply(Boom.unauthorized('invalid password'));
-            console.log('[authenticate] valid');
             const sid = hat();
             request.server.app.cache.set(sid, { account: users[0] }, 0, (err) => {
                 if (err) {

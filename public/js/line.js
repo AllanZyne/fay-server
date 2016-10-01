@@ -1,57 +1,87 @@
+"use strict";
+// jshint browser:true, devel: true
+/* globals $, $$, PROJECTID, FILEID, LINEID */
 
 // var PROJECTID = 'AiryFairy';
 // var FILEID = 'ss527aa01.sjsx';
 // var LINEID;
 
-function commitClick(event) {
-    console.log('commitClick');
+// function commitClick(event) {
+//     console.log('commitClick');
 
-    let text = $('.input textarea').value;
-    let speeker = $('.line-editor .line.original .speeker');
-    if (speeker) {
-        speeker = speeker.textContent;
-        text = speeker + '　' + text;
-    }
+//     let text = $('.input textarea').value;
+//     let speeker = $('.line-editor .line.original .speeker');
+//     if (speeker) {
+//         speeker = speeker.textContent;
+//         text = speeker + '　' + text;
+//     }
 
-    console.log('commitClick', text);
+//     console.log('commitClick', text);
 
-    $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${LINEID.slice(1)}`, text).then(
-        result => console.log(result),
-        err    => console.log(err)
+//     $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${LINEID.slice(1)}`, text).then(
+//         result => console.log(result),
+//         err    => console.log(err)
+//     );
+// }
+
+function commitLine(lineid, text) {
+    console.log('commitLine', lineid, text);
+
+    $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${lineid}`, text).then(
+        result => {
+            console.log('commitLine', lineid, result);
+            $('#L'+lineid).classList.add('translated');
+        },
+        err    => console.log('commitLine', lineid, err)
     );
 }
 
-function lineClick(event) {
-    console.log('lineClick');
 
-    if (this.classList.contains('lock'))
+function lineClick(event) {
+    // console.log('lineClick');
+
+    if (this.classList.contains('lock') || this.classList.contains('selected'))
         return;
 
-    let others = $$('.line-wrapper.selected');
-    for (let other of others) {
-        other.classList.remove('selected');
+    let thats = $$('.line-wrapper.selected');
+    let thatCommits = [];
+    for (let that of thats) {
+        let transline = that.querySelector('.line.translated .text');
+        let text = that.querySelector('.input textarea').value;
+        text = text.trim();
+        transline.textContent = text;
+        transline.classList.remove('input');
+        that.classList.remove('selected');
+
+        if (that.dataset.text != text) {
+            let speeker = that.dataset.speeker;
+            if (speeker) {
+                text = speeker + '　' + text;
+            }
+            commitLine(that.id.slice(1), text);
+        }
     }
+
     this.classList.add('selected');
 
-    LINEID = this.id;
+    // let editor = $('main .line-editor');
+    // editor.innerHTML = this.outerHTML;
+    // editor.style.display = 'block';
 
-    let editor = $('main .line-editor');
-    editor.innerHTML = this.outerHTML;
-    editor.style.display = 'block';
-
-    let transline = editor.querySelector('.line.translated .text');
+    let transline = this.querySelector('.line.translated .text');
     let transtext = transline.textContent;
 
-    transline.classList.add('input');
-    transline.innerHTML = '<textarea>' + transtext + '</textarea>' +
-    '<div class="pannel">' +
-        '<button class="blue">取消</button>' +
-        '<button class="yellow">历史</button>' +
-        '<button class="green" id="commit">提交</button>' +
-    '</div>';
+    this.dataset.text = transtext;
 
-    let commit = transline.querySelector('#commit');
-    commit.addEventListener('click', commitClick);
+    transline.classList.add('input');
+    transline.innerHTML = '';
+
+    let textarea = document.createElement('textarea');
+    textarea.value = transtext;
+    transline.appendChild(textarea);
+
+    // let commit = transline.querySelector('#commit');
+    // commit.addEventListener('click', commitClick);
 }
 
 
@@ -81,7 +111,6 @@ function articalScroll(event) {
     }
 }
 
-
 function getLineData() {
     console.log('getLineData', LineLoading);
     if (LineEnd || LineLoading)
@@ -91,11 +120,11 @@ function getLineData() {
     LineLoading = true;
 
     Promise.all([
-        getData(`/api/project/${PROJECTID}/file/${FILEID}/line`, {
+        $.get(`/api/project/${PROJECTID}/file/${FILEID}/line`, {
             page: LinePage,
             per_page: LinePerPage
         }),
-        getData(`/api/project/${PROJECTID}/file/${FILEID}/transline?page=${LinePage}`, {
+        $.get(`/api/project/${PROJECTID}/file/${FILEID}/transline?page=${LinePage}`, {
             page: LinePage,
             per_page: LinePerPage
         })
@@ -115,7 +144,7 @@ function getLineData() {
                 transText = trans[trans.length - 1].text;
             }
 
-            let speeker = '', tranSpeeker = '';
+            let speeker, tranSpeeker;
             let m = text.indexOf('　');
             if (m > 0) {
                 speeker = tranSpeeker = text.slice(0, m);
@@ -129,6 +158,7 @@ function getLineData() {
             let lineWrapper = document.createElement('div');
 
             lineWrapper.id = 'L'+LineIndex;
+            lineWrapper.dataset.speeker = speeker;
             LineIndex++;
 
             lineWrapper.classList.add('line-wrapper');
@@ -138,11 +168,11 @@ function getLineData() {
                 lineWrapper.classList.add('translated');
 
             lineWrapper.innerHTML = '<div class="line original">' +
-                (speeker.length ? `<p class="speeker">${speeker}</p>`:'') +
+                (speeker ? `<p class="speeker">${speeker}</p>`:'') +
                 `<p class="text">${text}</p>` +
             '</div>' +
             '<div class="line translated">' +
-                (tranSpeeker.length ? `<p class="speeker">${tranSpeeker}</p>`:'') +
+                (tranSpeeker ? `<p class="speeker">${tranSpeeker}</p>`:'') +
                 `<p class="text">${transText}</p>` +
             '</div>';
 
@@ -159,23 +189,9 @@ function getLineData() {
 }
 
 function getLines() {
-    let main = $('main');
-    main.innerHTML = '<div class="left-wrapper">' +
-        '<article class="left-up center"></article>' +
-        '<div class="left-down line-editor" style="display: none;">' +
-            '<div class="line-wrapper">' +
-                '<div class="line original">' +
-                '</div>' +
-                '<div class="line translated">' +
-                '</div>' +
-            '</div>' +
-        '</div>' +
-    '</div>';
-
-    let article = $('main article');
-    article.addEventListener('scroll', articalScroll);
-
-    let editor = $('main .line-editor');
+    let main = $('main .container');
+    main.innerHTML = '<article class="left-up center"></article>';
+    main.addEventListener('scroll', articalScroll);
 
     LinePage = LineIndex = 0;
     LineLoading = LineEnd = false;

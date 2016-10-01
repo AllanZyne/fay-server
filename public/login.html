@@ -2,18 +2,23 @@
 <html>
   <head>
     <title>hanz</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Italianno|Miss+Fajardose|Qwigley" rel="stylesheet">
     <link rel="stylesheet" href="/assets/css/login.css">
   </head>
   <body lang="zh-CN">
-    <form action="login">
-      <input type="text" id="username" name="username" autofocus="true" />
-      <br>
-      <input type="password" id="password" name="password" />
-      <br>
-      <input type="submit"  value="登陆" />
-    </form>
+    <main>
+      <form action="login">
+        <title>Login</title>
+        <label for="email">email</label>
+        <input type="text" id="email" name="email" autofocus="true">
+        <label for="password">password</label>
+        <input type="password" id="password" name="password">
+        <input type="submit" value="登陆" />
+      </form>
+    </main>
+    <footer>Copyright © 1997-2013 <a href="www.fay0n.cc">Fay0n Ltd.</a></footer>
     <script src="/assets/js/util.js"></script>
     <script src="/assets/js/login.js"></script>
   </body>

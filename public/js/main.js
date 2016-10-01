@@ -1,6 +1,6 @@
 "use strict";
 // jshint browser:true, devel: true
-/* globals $, getData, MyTable */
+/* globals $, getLines, MyTable */
 
 
 var PROJECTID, FILEID, LINEID;
@@ -45,7 +45,7 @@ window.addEventListener("popstate", function () {
 
 
 function getProjects() {
-    getData('/api/project', {}, LOGINTOKEN).then((data) => {
+    $.get('/api/project', {}, LOGINTOKEN).then((data) => {
         console.log('/api/project', data);
 
         let table = new MyTable();
@@ -66,14 +66,14 @@ function getProjects() {
             }
         });
 
-        $('main').innerHTML = '';
-        $('main').appendChild(table.render());
+        $('main .container').innerHTML = '';
+        $('main .container').appendChild(table.render());
     });
 }
 
 
 function getFiles() {
-    getData(`/api/project/${PROJECTID}/file`, {}, LOGINTOKEN).then((data) => {
+    $.get(`/api/project/${PROJECTID}/file`, {}, LOGINTOKEN).then((data) => {
         console.log('/api/project/file', data);
 
         if (! data)
@@ -97,11 +97,7 @@ function getFiles() {
             }
         });
 
-        $('main').innerHTML = '';
-        $('main').appendChild(table.render());
+        $('main .container').innerHTML = '';
+        $('main .container').appendChild(table.render());
     });
-}
-
-function getLines() {
-
 }

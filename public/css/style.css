@@ -6,45 +6,115 @@
 
 html, body {
     height: 100vh;
-    // overflow: hidden;
 }
 
 body {
-    font-size: 14pt;
-
     display: flex;
     flex-flow: column nowrap;
     align-items: stretch;
-    // align-content: stretch;
+    justify-content: center;
+    /*align-content: stretch;*/
+
+    font-size: 14pt;
 }
 
-.top {
+footer {
+    font-size: 0.7em;
+    padding: 1em;
+    text-align: center;
+}
+
+nav {
     flex-basis: 44px;
     flex-shrink: 0;
     flex-grow: 0;
 
-    // background-color: black;
-    // border-bottom: 1px solid;
-    overflow: hidden;
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: center;
+
+    padding: 0em 0.7em;
+
+    color: rgba(75,77,132,1);
+    font-size: 0.75em;
 }
 
-.wrapper {
+nav .logo {
+    flex-grow: 0;
+}
+
+nav .user-pannel {
+    flex-grow: 9999;
+
+    text-align: right;
+}
+
+nav a {
+    color: rgba(75,77,132,1);
+    text-decoration: none;
+    background: none;
+}
+
+nav a:hover {
+    color: rgba(89,92,160,1);
+}
+
+main {
     flex-grow: 99999;
 
     display: flex;
     flex-flow: row nowrap;
     align-items: stretch;
 
+    border-top: 2px solid beige;
+
     background-color: #fff;
     overflow: hidden;
 }
 
-.left-wrapper {
-    width: 75vw;
+.container {
+    width: 80vw;
+    overflow-y: scroll;
+}
+
+aside {
+    flex-grow: 9999;
     overflow: hidden;
 }
 
-.right-wrapper {
-    flex-grow: 99999;
-    overflow: hidden;
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: black;
+    border: 4px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 5px;
+    width: 10px;
+    height: 10px;
+    border: 2px solid black;
+    background: white;
+}
+
+dl {
+    border: 3px double #ccc;
+    padding: 0.5em;
+}
+
+dt {
+    width: 7em;
+    font-weight: bold;
+    color: green;
+}
+
+/*dt:after {
+    content: ":";
+}*/
+
+dd {
+    padding: 0 0 0.5em 0;
 }
