@@ -1,3 +1,5 @@
+/* clean styles */
+
 * {
     padding: 0;
     margin: 0;
@@ -7,6 +9,15 @@
 html, body {
     height: 100vh;
 }
+
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+
+/* start defines */
 
 body {
     display: flex;
@@ -79,7 +90,9 @@ main {
 
 aside {
     flex-grow: 9999;
+
     overflow: hidden;
+    padding: 2em;
 }
 
 ::-webkit-scrollbar {
@@ -100,21 +113,51 @@ aside {
     background: white;
 }
 
-dl {
+
+.terms dl {
     border: 3px double #ccc;
     padding: 0.5em;
 }
 
-dt {
-    width: 7em;
+.terms dt {
     font-weight: bold;
-    color: green;
+    text-decoration: underline;
 }
 
-/*dt:after {
-    content: ":";
-}*/
-
-dd {
+.terms dd {
+    margin: 0;
     padding: 0 0 0.5em 0;
+}
+
+
+.terms input {
+    border: 2px solid black;
+    font-size: 1em;
+}
+
+.terms textarea {
+    border: 2px solid black;
+    font-size: 1em;
+}
+
+.controls {
+    display: flex;
+    flex-flow: row nowrap;
+    align-items: stretch;
+}
+
+.controls .edit {
+    flex-grow: 9999;
+}
+
+.controls .move {
+
+}
+
+.controls button {
+    width: 2em;
+    height: 1.2em;
+    font-size: 1em;
+    border: 1px solid black;
+    background: white;
 }

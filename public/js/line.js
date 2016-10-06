@@ -1,33 +1,23 @@
 "use strict";
 // jshint browser:true, devel: true
-/* globals $, $$, PROJECTID, FILEID, LINEID */
+/* globals $, $$, PROJECTID, FILEID, LINEID, baiduFanYi */
 
-// var PROJECTID = 'AiryFairy';
-// var FILEID = 'ss527aa01.sjsx';
-// var LINEID;
+//
+// TODO
+//
+// [X] control+j/k 上下
+// [] 自动选择
+// [] sameGroup
+// [] 词典
+// [X] 自动翻译
+// [] 术语(快速添加)
+//
 
-// function commitClick(event) {
-//     console.log('commitClick');
-
-//     let text = $('.input textarea').value;
-//     let speeker = $('.line-editor .line.original .speeker');
-//     if (speeker) {
-//         speeker = speeker.textContent;
-//         text = speeker + '　' + text;
-//     }
-
-//     console.log('commitClick', text);
-
-//     $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${LINEID.slice(1)}`, text).then(
-//         result => console.log(result),
-//         err    => console.log(err)
-//     );
-// }
 
 function commitLine(lineid, text) {
     console.log('commitLine', lineid, text);
 
-    $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${lineid}`, text).then(
+    return $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${lineid}`, text).then(
         result => {
             console.log('commitLine', lineid, result);
             $('#L'+lineid).classList.add('translated');
@@ -36,52 +26,141 @@ function commitLine(lineid, text) {
     );
 }
 
+function unselectLines(restore) {
+    let $thats = $$('.line-wrapper.selected');
+
+    for (let $that of $thats) {
+        let $transText = $that.querySelector('.line.translated .text');
+        let text = $that.querySelector('.input textarea').value;
+        text = text.trim();
+        if (restore || (! text))
+            text = $that.dataset.text;
+
+        $transText.textContent = text;
+        $transText.classList.remove('input');
+        $that.classList.remove('selected');
+
+        if ($that.dataset.text !== text) {
+            let speeker = $that.dataset.speeker;
+            if (speeker) {
+                text = speeker + '　' + text;
+            }
+            commitLine($that.id.slice(1), text);
+        }
+    }
+}
 
 function lineClick(event) {
     // console.log('lineClick');
 
-    if (this.classList.contains('lock') || this.classList.contains('selected'))
-        return;
-
-    let thats = $$('.line-wrapper.selected');
-    let thatCommits = [];
-    for (let that of thats) {
-        let transline = that.querySelector('.line.translated .text');
-        let text = that.querySelector('.input textarea').value;
-        text = text.trim();
-        transline.textContent = text;
-        transline.classList.remove('input');
-        that.classList.remove('selected');
-
-        if (that.dataset.text != text) {
-            let speeker = that.dataset.speeker;
-            if (speeker) {
-                text = speeker + '　' + text;
-            }
-            commitLine(that.id.slice(1), text);
+    // console.log(event.target);
+    let $target = event.target;
+    if ($target) {
+        if ($target.id === 'reset-line') {
+            return unselectLines(true);
+        } else if ($target.id === 'prev-line') {
+            let event = new KeyboardEvent('keydown', {
+                ctrlKey: true,
+                key: 'k'
+            });
+            return lineKeyPress(event);
+        } else if ($target.id === 'next-line') {
+            let event = new KeyboardEvent('keydown', {
+                ctrlKey: true,
+                key: 'j'
+            });
+            return lineKeyPress(event);
         }
     }
 
-    this.classList.add('selected');
+    let $this = this;
 
-    // let editor = $('main .line-editor');
-    // editor.innerHTML = this.outerHTML;
-    // editor.style.display = 'block';
+    if ($this.classList.contains('lock') || $this.classList.contains('selected'))
+        return;
 
-    let transline = this.querySelector('.line.translated .text');
-    let transtext = transline.textContent;
+    unselectLines();
 
-    this.dataset.text = transtext;
+    $this.classList.add('selected');
 
-    transline.classList.add('input');
-    transline.innerHTML = '';
+    let $transText = $this.querySelector('.line.translated .text');
+    let transText = $transText.textContent;
 
-    let textarea = document.createElement('textarea');
-    textarea.value = transtext;
-    transline.appendChild(textarea);
+    $this.dataset.text = transText;
 
-    // let commit = transline.querySelector('#commit');
-    // commit.addEventListener('click', commitClick);
+    $transText.classList.add('input');
+    $transText.innerHTML = '';
+
+    let $textarea = document.createElement('textarea');
+    $textarea.value = transText;
+    $transText.appendChild($textarea);
+
+    let $controls = document.createElement('div');
+    $controls.classList.add('controls');
+    $controls.innerHTML =
+    '<div class="edit">' +
+        '<button id="reset-line" title="关闭(Esc)">&times;</button>' +
+    '</div>' +
+    '<div class="move">' +
+        '<button id="prev-line" title="上一行(Ctrl+K)">&lt;</button>' +
+        '<button id="next-line" title="下一行(Ctrl+J)">&gt;</button>' +
+    '</div>';
+
+    let $helper = document.createElement('div');
+    $helper.classList.add('helper');
+    $helper.innerHTML = '<div class="fanyi"></div><div class="terms"></div>';
+
+    $transText.appendChild($textarea);
+    $transText.appendChild($controls);
+    $transText.appendChild($helper);
+
+    $textarea.focus();
+
+    let $text = $this.querySelector('.line.original .text');
+    let query = $text.textContent;
+    query = query.replace(/(「)|(」)|(\\n)/g, '');
+    console.log(query);
+    baiduFanYi(query);
+}
+
+function lineKeyPress(event) {
+    // console.log(event);
+
+    if (event.ctrlKey) {
+        if (event.key === 'j' || event.key === 'k' ||
+            event.key === 'n' || event.key === 'p' ||
+            event.key === 'Enter') {
+            event.preventDefault();
+
+            let $lineWrapper = $('.line-wrapper.selected');
+            let lineIndex = -1;
+            if ($lineWrapper) {
+                lineIndex = parseInt($lineWrapper.id.slice(1), 10);
+            }
+
+            if (event.key === 'j' || event.key === 'n')
+                lineIndex++;
+            else if (event.key === 'k' || event.key === 'p')
+                lineIndex--;
+
+            if (event.key === 'Enter') {
+                if (event.shiftKey)
+                    lineIndex--;
+                else
+                    lineIndex++;
+            }
+
+            if (lineIndex < 0)
+                lineIndex = 0;
+            let maxIndex = $$('.line-wrapper').length;
+            if (lineIndex >= maxIndex)
+                lineIndex = maxIndex - 1;
+
+            $('#L'+lineIndex).click();
+        }
+    } else if (event.key === 'Escape') {
+        event.preventDefault();
+        unselectLines(true);
+    }
 }
 
 
@@ -119,16 +198,12 @@ function getLineData() {
     let article = $('main article');
     LineLoading = true;
 
-    Promise.all([
+    return Promise.all([
         $.get(`/api/project/${PROJECTID}/file/${FILEID}/line`, {
             page: LinePage,
             per_page: LinePerPage
-        }),
-        $.get(`/api/project/${PROJECTID}/file/${FILEID}/transline?page=${LinePage}`, {
-            page: LinePage,
-            per_page: LinePerPage
         })
-    ]).then(([lines, translines]) => {
+    ]).then(([lines]) => {
         // console.log(lines);
         // console.log('translines', translines);
 
@@ -137,34 +212,36 @@ function getLineData() {
         }
 
         for (let i = 0, len = lines.length; i < len; i++) {
-            let line = lines[i], trans = translines[i].commits;
+            let line = lines[i];
             let text = line.text,
-                transText = text;
-            if (trans.length > 0) {
-                transText = trans[trans.length - 1].text;
-            }
-
+                transText = line.transText ? line.transText : line.text;
             let speeker, tranSpeeker;
-            let m = text.indexOf('　');
-            if (m > 0) {
-                speeker = tranSpeeker = text.slice(0, m);
-                text = text.slice(m+1);
+
+            let matches = text.match(/(\S+)　+(\S*)/);
+            if (matches) {
+                speeker = tranSpeeker = matches[1];
+                text = matches[2];
             }
-            m = transText.indexOf('　');
-            if (m > 0) {
-                transText = transText.slice(m+1);
+            matches = transText.match(/(\S+)　+(\S*)/);
+            if (matches) {
+                transText = matches[2];
             }
 
             let lineWrapper = document.createElement('div');
 
             lineWrapper.id = 'L'+LineIndex;
             lineWrapper.dataset.speeker = speeker;
+            lineWrapper.dataset.userId = line.userId;
+            lineWrapper.dataset.commitTime = line.time;
+            lineWrapper.dataset.sameGroup = line.sameGroup;
             LineIndex++;
 
             lineWrapper.classList.add('line-wrapper');
             if (line.lock)
                 lineWrapper.classList.add('lock');
-            if (trans.length)
+            if (typeof line.sameGroup === 'number')
+                lineWrapper.classList.add(`group-${line.sameGroup}`);
+            if (transText !== text)
                 lineWrapper.classList.add('translated');
 
             lineWrapper.innerHTML = '<div class="line original">' +
@@ -189,15 +266,19 @@ function getLineData() {
 }
 
 function getLines() {
+    let $path = $('#path');
+    $path.innerHTML = `<a href="/">/</a><a href="/${PROJECTID}">${PROJECTID}</a>/<a href="/${PROJECTID}/${FILEID}">${FILEID}</a>`;
+
     let main = $('main .container');
     main.innerHTML = '<article class="left-up center"></article>';
     main.addEventListener('scroll', articalScroll);
+    main.addEventListener('keydown', lineKeyPress);
 
     LinePage = LineIndex = 0;
     LineLoading = LineEnd = false;
     ScrollTicking = false;
 
-    getLineData();
+    return getLineData();
 }
 
 // getLines();

@@ -3,38 +3,6 @@
 /* globals $, getLines, MyTable */
 
 
-var PROJECTID, FILEID, LINEID;
-var LOGINTOKEN;
-
-function parseURL() {
-    let pathname = window.location.pathname.split('/');
-    PROJECTID = pathname[1];
-    FILEID = pathname[2];
-    LINEID = window.location.hash.slice(2);
-    let m = window.location.search.match('token=([^&]+)');
-    if (m)
-        LOGINTOKEN = m[1];
-}
-
-function changeURL(urlPath) {
-    // window.history.replaceState({},"", urlPath);
-    window.history.pushState({},"", urlPath);
-}
-
-function checkURL() {
-    // XXXX: 404.html
-    parseURL();
-    if (PROJECTID) {
-        if (FILEID) {
-            getLines();
-        } else {
-            getFiles();
-        }
-    } else {
-        getProjects();
-    }
-}
-
 window.addEventListener("load", function () {
     checkURL();
 });
@@ -44,8 +12,116 @@ window.addEventListener("popstate", function () {
 });
 
 
+var PROJECTID, FILEID, LINEID;
+var LOGINTOKEN;
+var TERMS;
+
+
+function parseURL() {
+    let pathname = window.location.pathname.split('/');
+    PROJECTID = pathname[1];
+    FILEID = pathname[2];
+    LINEID = window.location.hash.slice(2);
+
+    console.log('parseURL', {
+        PROJECTID: PROJECTID,
+        FILEID: FILEID,
+        LINEID: LINEID
+    });
+}
+
+function changeURL(urlPath) {
+    // window.history.replaceState({},"", urlPath);
+    window.history.pushState({}, "", urlPath);
+}
+
+function getError(err) {
+    let $container = $('main .container');
+
+    console.log(err);
+
+    $container.innerHTML = `<div class="error">
+        <h3>错误请求</h3>
+        <pre>${JSON.stringify(err, null, 4)}</pre>
+    </div>`;
+}
+
+function checkURL() {
+    console.log('checkURL', window.location);
+
+    // XXXX: 404.html
+    parseURL();
+
+    if (! PROJECTID) {
+        return getProjects().catch(getError);
+    }
+
+    switch(PROJECTID) {
+        case 'user':
+            return getUser();
+        case 'terms':
+            return getTermsData().then(getTerms).catch(getError);
+        default:
+            if (FILEID)
+                return getTermsData().then(getLines).catch(getError);
+            return getFiles().catch(getError);
+    }
+}
+
+
+function getUser() {
+
+}
+
+function getTermsData() {
+    return $.get('/api/terms').then(terms => {
+        TERMS = terms;
+        for (let term of terms) {
+            TERMS[term.term] = term;
+        }
+    });
+}
+
+
+function getTerms() {
+    let $container = $('.container');
+    $container.innerHTML = '';
+
+    let $terms = document.createElement('div');
+    $terms.classList.add('terms');
+
+    $terms.innerHTML =
+'    <dl class="terms-list"></dl>' +
+'    <form method="post" action="/api/terms">' +
+'      <fieldset>' +
+'        <legend>添加名词</legend>' +
+'        <div>' +
+'          <label for="term">名词</label>' +
+'          <input type="text" id="term" name="term" required>' +
+'        </div>' +
+'        <div>' +
+'          <label for="explanation">解释</label>' +
+'          <textarea id="explanation" name="explanation" required></textarea>' +
+'        </div>' +
+'        <div>' +
+'          <input type="reset" value="重置" />' +
+'          <input type="submit" value="添加" />' +
+'        </div>' +
+'      </fieldset>';
+
+    $container.appendChild($terms);
+
+    let $termList = $('.terms dl');
+    for (let term of TERMS) {
+        $termList.innerHTML += `<dt>${term.term}</dt><dd>${term.explanation}</dd>`;
+    }
+}
+
 function getProjects() {
-    $.get('/api/project', {}, LOGINTOKEN).then((data) => {
+    let $path = $('#path');
+    $path.innerHTML = `<a href="/">/</a>`;
+
+    return $.get('/api/project').then((data) => {
         console.log('/api/project', data);
 
         let table = new MyTable();
@@ -73,7 +149,10 @@ function getProjects() {
 
 
 function getFiles() {
-    $.get(`/api/project/${PROJECTID}/file`, {}, LOGINTOKEN).then((data) => {
+    let $path = $('#path');
+    $path.innerHTML = `<a href="/">/</a><a href="/${PROJECTID}">${PROJECTID}</a>`;
+
+    return $.get(`/api/project/${PROJECTID}/file`, {}, LOGINTOKEN).then((data) => {
         console.log('/api/project/file', data);
 
         if (! data)
