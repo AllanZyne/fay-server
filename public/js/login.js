@@ -5,23 +5,18 @@ $('form').addEventListener('submit', function(event) {
     let data = new FormData(this),
         username = data.get('email');
         password = data.get('password');
-    $.get('/api/authenticate', {
+    $.get('/api/login', {
         username: username,
         password: password
-    }).then(data => {
-        // console.log('[login] data', data);
-        if (data) {
-            if (data.message.match('username')) {
-                $('#email').classList.add('invalid');
-                $('#password').classList.remove('invalid');
-            } else if (data.message.match('password')) {
-                $('#password').classList.add('invalid');
-                $('#email').classList.remove('invalid');
-            }
-        } else {
-            window.location = '/';
+    }).then(_ => {
+        window.location = '/';
+    }).catch(err => {
+        if (err.message.match('username')) {
+            $('#email').classList.add('invalid');
+            $('#password').classList.remove('invalid');
+        } else if (err.message.match('password')) {
+            $('#password').classList.add('invalid');
+            $('#email').classList.remove('invalid');
         }
-    }, err => {
-        // console.log('[login] error', err);
     });
 });
