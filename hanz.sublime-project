@@ -2,7 +2,14 @@
 	"folders":
 	[
 		{
+			"file_exclude_patterns":
+			[
+				"*.lnk"
+			],
 			"path": "."
+		},
+		{
+			"path": "D:\\_GAME\\AiryFairy\\_sjs"
 		}
 	]
 }
