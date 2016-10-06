@@ -21,3 +21,29 @@ tran_id = liine_id << 4 + tran_id
 
 j k  上下
 
+
+{
+    name: STRING,
+    lock: BOOL,
+    createTime: DATE,
+    linesCount: NUM,
+    transCount: NUM,
+    locksCount: NUM,
+
+    files : [
+        {
+            name: STRING,
+            lock: BOOL,
+            linesCount: NUM,
+            transCount: NUM,
+            locksCount: NUM,
+
+            lines: [
+                {
+                    text: STRING,
+                    sameGroup: NUM
+                }
+            ]
+        }
+    ]
+}
