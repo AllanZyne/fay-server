@@ -30,7 +30,7 @@ function hashPassword(data) {
 
 用户管理
 
-user-add USERID NAME PASSWORD TYPE
+user-add USERID PASSWORD TYPE
 TYPE:
    0: ????
    1: WRITE  翻译
@@ -45,19 +45,19 @@ let user = async(function*(cmd, cmdArgs) {
     let result;
 
     if (cmd[1] == 'add') {
-        let [userId, name, password, type] = cmdArgs;
-        if (! (userId && name && password && type))
+        let [username, password, type] = cmdArgs;
+        if (! (username && password && type))
             help(cmd);
         password = yield hashPassword(password);
-        result = yield database.user_add(db, userId, name, password, type).catch(err => { throw err; });
+        result = yield database.user_add(db, username, password, type).catch(err => { throw err; });
     } else if (cmd[1] == 'remove') {
-        let [ userId ] = cmdArgs;
-        if (! userId)
+        let [ username ] = cmdArgs;
+        if (! username)
             help(cmd);
-        result = yield database.user_delete(db, userId).catch(err => { throw err; });
+        result = yield database.user_delete(db, username).catch(err => { throw err; });
     } else if (cmd[1] == 'list') {
-        let [ userId ] = cmdArgs;
-        result = yield database.user_list(db, userId).catch(err => { throw err; });
+        let [ username ] = cmdArgs;
+        result = yield database.user_list(db, username).catch(err => { throw err; });
     }
 
     result.connection = undefined;
@@ -132,10 +132,10 @@ function help(cmd) {
         console.log();
         console.log('USER');
         console.log('-----------------------------------');
-        console.log('user-add USERID NAME PASSWORD TYPE');
-        console.log('user-remove USERID');
-        console.log('user-update USERID [-p PASSWORD] [-t TYPE]');
-        console.log('user-list [USERID]');
+        console.log('user-add USERNAME PASSWORD TYPE');
+        console.log('user-remove USERNAME');
+        console.log('user-update USERNAME [-p PASSWORD] [-t TYPE]');
+        console.log('user-list [USERNAME]');
         console.log();
         console.log('npm <cmd> -h  quck help on <cmd>');
         console.log();
