@@ -15,7 +15,8 @@
 article {
     padding: 2em;
 
-    font-family: "Microsoft YaHei";
+    font-family: 黑体, "MS Gothic";
+    text-rendering: optimizeLegibility;
     font-size: 1em;
     line-height: 1.2;
 }
@@ -69,12 +70,10 @@ article {
 }
 
 .line.translated {
-    /*font-family: "MS Gothic";*/
     margin-top: 0.3em;
 }
 
 .line.translated .text {
-/*    font-family: "SimHei", "MS Gothic";
     display: none;*/
     flex-grow: 999;
     color: rgb(6, 70, 152);
@@ -112,13 +111,14 @@ article {
     width: 100%;
     height: 60px;
 
+    font-family: 黑体, "MS Gothic";
     font-size: 1em;
-    background-color: #f7f7f7;
 
     padding: 3px;
     border: 1px solid rgb(221, 221, 221);
     box-shadow: inset 0 1px 2px rgba(0,0,0,0.075);
     box-sizing: border-box;
+    background-color: #f7f7f7;
 }
 
 .input .pannel {
