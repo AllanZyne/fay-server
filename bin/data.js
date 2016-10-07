@@ -54,7 +54,7 @@ let user = async(function*(cmd, cmdArgs) {
         let [ username ] = cmdArgs;
         if (! username)
             help(cmd);
-        result = yield database.user_delete(db, username).catch(err => { throw err; });
+        result = yield database.user_remove(db, username).catch(err => { throw err; });
     } else if (cmd[1] == 'list') {
         let [ username ] = cmdArgs;
         result = yield database.user_list(db, username).catch(err => { throw err; });

@@ -15,7 +15,7 @@
 article {
     padding: 2em;
 
-    font-family: 黑体, "MS Gothic";
+    font-family: "Microsoft YaHei";
     text-rendering: optimizeLegibility;
     font-size: 1em;
     line-height: 1.2;
@@ -31,17 +31,9 @@ article {
     border-right: 5px solid #dd3300;
 }
 
-.line-wrapper .line.translated {
-    display: none;
-}
-
 .line-wrapper.lock {
     border-left: 5px solid #0095dd;
     border-right: 5px solid #0095dd;
-}
-
-.line-wrapper.lock .line.translated {
-    display: flex;
 }
 
 .line-wrapper.translated {
@@ -49,17 +41,30 @@ article {
     border-right: 5px solid #00dd6d;
 }
 
-.line-wrapper.translated .line.translated {
-    display: flex;
-}
-
 .line-wrapper.selected {
     border-left: 5px solid #545454;
     border-right: 5px solid #545454;
 }
 
-.line-wrapper.selected .line.translated {
-    display: flex;
+.line-wrapper.committing {
+    border-left: 5px solid #00dd6d;
+    border-right: 5px solid #00dd6d;
+    animation: 3s cubic-bezier(0.39, 0.58, 0.57, 1) 0s infinite alternate border_color;
+}
+
+@keyframes border_color {
+    0% {
+        border-left: 5px solid #545454;
+        border-right: 5px solid #545454;
+    }
+    50% {
+        border-left: 5px solid #dd3300;
+        border-right: 5px solid #dd3300;
+    }
+    100% {
+        border-left: 5px solid #00dd6d;
+        border-right: 5px solid #00dd6d;
+    }
 }
 
 .line {
@@ -69,39 +74,40 @@ article {
     align-items: flex-start;
 }
 
-.line.translated {
-    margin-top: 0.3em;
-}
-
-.line.translated .text {
-    display: none;*/
+.line .text {
     flex-grow: 999;
+    flex-shrink: 1;
+
     color: rgb(6, 70, 152);
 }
 
-.speeker {
+.line .speeker {
     /*outline: 1px solid black;*/
-
     flex-basis: 4em;
     flex-shrink: 0;
 }
 
-.text {
-    /*outline: 1px solid black;*/
-
-    flex-shrink: 1;
+.line.translated {
+    display: none;
+    margin-top: 0.3em;
 }
 
-
-.line-editor {
-    outline: 1px solid black;
-
-    padding: 1em;
+.lock .line.translated {
+    display: flex;
 }
 
-.line-editor .text {
-    width: 50em;
+.translated .line.translated {
+    display: flex;
 }
+
+.selected .line.translated {
+    display: flex;
+}
+
+.committing .line.translated {
+    display: flex;
+}
+
 
 .input {
 
@@ -111,7 +117,7 @@ article {
     width: 100%;
     height: 60px;
 
-    font-family: 黑体, "MS Gothic";
+    font-family: "Microsoft YaHei";
     font-size: 1em;
 
     padding: 3px;

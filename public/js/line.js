@@ -1,29 +1,36 @@
 "use strict";
 // jshint browser:true, devel: true
-/* globals $, $$, PROJECTID, FILEID, LINEID, baiduFanYi */
+/* globals $, $$, PROJECTID, FILEID, LINEID, baiduFanYi, KeyboardEvent */
 
 //
 // TODO
 //
 // [X] control+j/k 上下
 // [] 自动选择
-// [] sameGroup
+// [X] sameGroup
 // [] 词典
 // [X] 自动翻译
 // [] 术语(快速添加)
 //
 
 
-function commitLine(lineid, text) {
-    console.log('commitLine', lineid, text);
+function commitLine($line, text) {
+    let lineIndex = $line.dataset.lineIndex;
 
-    return $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${lineid}`, text).then(
-        result => {
-            console.log('commitLine', lineid, result);
-            $('#L'+lineid).classList.add('translated');
-        },
-        err    => console.log('commitLine', lineid, err)
-    );
+    // console.log('commitLine', lineIndex);
+    // console.log('commitLine', text);
+
+    $line.classList.add('committing');
+    return $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${lineIndex}`, text)
+        .then(result => {
+            // console.log('commitLine result', result);
+            $line.classList.remove('committing');
+            $line.classList.add('translated');
+        }).catch(err => {
+            let $transText = $line.querySelector('.line.translated .text');
+            $transText.textContent = $line.dataset.transText;
+            $line.classList.remove('committing');
+        });
 }
 
 function unselectLines(restore) {
@@ -34,18 +41,31 @@ function unselectLines(restore) {
         let text = $that.querySelector('.input textarea').value;
         text = text.trim();
         if (restore || (! text))
-            text = $that.dataset.text;
+            text = $that.dataset.transText;
 
         $transText.textContent = text;
         $transText.classList.remove('input');
         $that.classList.remove('selected');
 
-        if ($that.dataset.text !== text) {
+        if ($that.dataset.transText !== text) {
             let speeker = $that.dataset.speeker;
             if (speeker) {
                 text = speeker + '　' + text;
             }
-            commitLine($that.id.slice(1), text);
+            commitLine($that, text);
+
+            let sameGroup = $that.dataset.sameGroup;
+            // console.log(typeof sameGroup, sameGroup);
+            if (sameGroup) {
+                let $sames = $$(`.line-wrapper.line-group-${sameGroup}`);
+                for (let $line of $sames) {
+                    if ($line.id === $that.id)
+                        continue;
+                    $line.classList.add('translated');
+                    let $transText = $that.querySelector('.line.translated .text');
+                    $transText.textContent = text;
+                }
+            }
         }
     }
 }
@@ -85,7 +105,7 @@ function lineClick(event) {
     let $transText = $this.querySelector('.line.translated .text');
     let transText = $transText.textContent;
 
-    $this.dataset.text = transText;
+    $this.dataset.transText = transText;
 
     $transText.classList.add('input');
     $transText.innerHTML = '';
@@ -118,7 +138,7 @@ function lineClick(event) {
     let $text = $this.querySelector('.line.original .text');
     let query = $text.textContent;
     query = query.replace(/(「)|(」)|(\\n)/g, '');
-    console.log(query);
+    // console.log(query);
     baiduFanYi(query);
 }
 
@@ -191,7 +211,7 @@ function articalScroll(event) {
 }
 
 function getLineData() {
-    console.log('getLineData', LineLoading);
+    // console.log('getLineData', LineLoading);
     if (LineEnd || LineLoading)
         return;
 
@@ -204,7 +224,7 @@ function getLineData() {
             per_page: LinePerPage
         })
     ]).then(([lines]) => {
-        // console.log(lines);
+        // console.log('getLineData', lines);
         // console.log('translines', translines);
 
         if (lines.length < LinePerPage) {
@@ -230,17 +250,21 @@ function getLineData() {
             let lineWrapper = document.createElement('div');
 
             lineWrapper.id = 'L'+LineIndex;
-            lineWrapper.dataset.speeker = speeker;
+            lineWrapper.dataset.lineIndex = LineIndex;
+            lineWrapper.dataset.lineId = line._id;
+            lineWrapper.dataset.speeker = speeker ? speeker : '';
             lineWrapper.dataset.userId = line.userId;
             lineWrapper.dataset.commitTime = line.time;
+            lineWrapper.dataset.edited = line.edited;
             lineWrapper.dataset.sameGroup = line.sameGroup;
             LineIndex++;
 
             lineWrapper.classList.add('line-wrapper');
             if (line.lock)
                 lineWrapper.classList.add('lock');
-            if (typeof line.sameGroup === 'number')
-                lineWrapper.classList.add(`group-${line.sameGroup}`);
+            if ((! line.edited) && (line.sameGroup !== null)) {
+                lineWrapper.classList.add(`line-group-${line.sameGroup}`);
+            }
             if (transText !== text)
                 lineWrapper.classList.add('translated');
 
