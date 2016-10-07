@@ -8,7 +8,7 @@ const hapi_cookie = require('hapi-auth-cookie');
 // const hapi_monitor = require('hapijs-status-monitor');
 const hapi_inert = require('inert');
 const hapi_good = require('good');
-const hapi_nes = require('nes');
+// const hapi_nes = require('nes');
 const Boom = require('boom');
 
 const database = require('../lib/database.js');
@@ -28,7 +28,7 @@ let DB = null;
 server.register([
     hapi_inert,
     hapi_cookie,
-    hapi_nes,
+    // hapi_nes,
 {
     register: hapi_good,
     options: {
@@ -552,29 +552,31 @@ function bcrypt_compare(data1, data2) {
 }
 
 function authenticate(request, reply) {
-    console.log('[authenticate]');
     let username = decodeURI(request.query.username),
         password = decodeURI(request.query.password);
-    database.user_list(DB, username).then(users => {
-        console.log('[authenticate]', users);
-        if (! users.length)
-            return reply(Boom.unauthorized('invalid username'));
-        return bcrypt_compare(password, users[0].password).then(valid => {
+    console.log('[authenticate]', username);
+    database.user_auth(DB, username).then(user => {
+        console.log('[authenticate]', user);
+        bcrypt_compare(password, user.password).then(valid => {
             console.log('[authenticate] valid');
             if (! valid)
                 return reply(Boom.unauthorized('invalid password'));
             const sid = hat();
-            request.server.app.cache.set(sid, { account: users[0] }, 0, (err) => {
-                if (err) {
-                    return reply(Boom.wrap(err));
-                }
-                console.log('[authenticate] redirect');
+            request.server.app.cache.set(sid, { account: user }, 0, (err) => {
+                if (err)
+                    return reply(err);
                 request.cookieAuth.set({ sid: sid });
-                return reply.redirect('/');
+
+                console.log('[authenticate] success');
+                return reply({
+                    message: 'success'
+                });
             });
+        }).catch(err => {
+            reply(err);
         });
     }).catch(err => {
-        reply(Boom.wrap(err));
+        return reply(Boom.unauthorized('invalid username'));
     });
 }
 
