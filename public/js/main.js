@@ -13,8 +13,7 @@ window.addEventListener("popstate", function () {
 
 
 var PROJECTID, FILEID, LINEID;
-var LOGINTOKEN;
-var TERMS;
+var TERMS, USER;
 
 
 function parseURL() {
@@ -51,14 +50,16 @@ function checkURL() {
 
     // XXXX: 404.html
     parseURL();
+    
+    getNav().catch(getError);
 
     if (! PROJECTID) {
         return getProjects().catch(getError);
     }
 
     switch(PROJECTID) {
-        case 'user':
-            return getUser();
+        // case 'user':
+        //     return getUser();
         case 'terms':
             return getTermsData().then(getTerms).catch(getError);
         default:
@@ -68,9 +69,17 @@ function checkURL() {
     }
 }
 
+function getNav() {
+    return getUser();
+}
 
 function getUser() {
-
+    return $.get('/api/user').then(user => {
+        console.log('/api/user', user);
+        USER = user;
+        $('#username').textContent = `${user._id}`;
+        $('#notify').textContent = `notify(${user.newNotify})`;
+    });
 }
 
 function getTermsData() {
@@ -152,7 +161,7 @@ function getFiles() {
     let $path = $('#path');
     $path.innerHTML = `<a href="/">/</a><a href="/${PROJECTID}">${PROJECTID}</a>`;
 
-    return $.get(`/api/project/${PROJECTID}/file`, {}, LOGINTOKEN).then((data) => {
+    return $.get(`/api/project/${PROJECTID}/file`, {}).then((data) => {
         console.log('/api/project/file', data);
 
         if (! data)
