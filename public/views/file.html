@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>hanz</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body lang="zh-CN">
+
+    <div class="files" id="files">
+      <table>
+        <thead>
+          <th>{{headers[0]}}</th>
+          <th>{{headers[1]}}</th>
+        </thead>
+        <tbody @if="1212" :foreach="datas">
+          <tr>
+            <td><a href="/AiryFairy/{{this.name}}">{{this.name}}</a></td>
+            <td>文本数{{this.lineCount}}段 | 已翻译{{this.transCount}}段 | 完成度{{this.lineCount/this.transCount}}%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <script src="/assets/js/index.js"></script>
+    <script src="/assets/js/file.js"></script>
+  </body>
+</html>

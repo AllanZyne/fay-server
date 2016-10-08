@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>hanz</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="../css/style.css">
+  </head>
+  <body lang="zh-CN">
+
+    <div class="files" id="files">
+      <table v:foreach="$data">
+        <tr>
+          <td>{{this.name}}</td>
+          <td>文本数{{this.lineCount}}段 | 已翻译{{this.transCount}}段 | 完成度{{this.lineCount/this.transCount}}%</td>
+        </tr>
+      </table>
+    </div>
+
+    
+    <script src="/assets/js/index.js"></script>
+    <script src="/assets/js/file.js"></script>
+  </body>
+</html>
