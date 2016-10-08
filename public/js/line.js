@@ -6,11 +6,12 @@
 // TODO
 //
 // [X] control+j/k 上下
-// [] 自动选择
+// [-] 自动选择
 // [X] sameGroup
 // [] 词典
 // [X] 自动翻译
 // [] 术语(快速添加)
+// [] URL hash跳转
 //
 
 
@@ -103,7 +104,7 @@ function lineClick(event) {
     $this.classList.add('selected');
 
     let $transText = $this.querySelector('.line.translated .text');
-    let transText = $transText.textContent;
+    let transText = $transText.textContent.trim();
 
     $this.dataset.transText = transText;
 
@@ -134,6 +135,15 @@ function lineClick(event) {
     $transText.appendChild($helper);
 
     $textarea.focus();
+    // console.log('「', transText.startsWith('「'), transText.endsWith('」'));
+    // if (transText.startsWith('「')) {
+    //     if (transText.endsWith('」'))
+    //         $textarea.setSelectionRange(1, transText.length-1);
+    //     else
+    //         $textarea.setSelectionRange(1, transText.length);
+    // } else if (transText.endsWith('」')) {
+    //     $textarea.setSelectionRange(0, transText.length-1);
+    // }
 
     let $text = $this.querySelector('.line.original .text');
     let query = $text.textContent;
