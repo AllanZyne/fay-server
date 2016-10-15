@@ -13,7 +13,7 @@ window.addEventListener("popstate", function () {
 
 
 var PROJECTID, FILEID, LINEID;
-var TERMS, USER;
+var TERMS, TERMSLIST, RE_TERMS, USER;
 
 
 function parseURL() {
@@ -50,7 +50,7 @@ function checkURL() {
 
     // XXXX: 404.html
     parseURL();
-    
+
     getNav().catch(getError);
 
     if (! PROJECTID) {
@@ -84,13 +84,22 @@ function getUser() {
 
 function getTermsData() {
     return $.get('/api/terms').then(terms => {
-        TERMS = terms;
-        for (let term of terms) {
-            TERMS[term.term] = term;
+        console.log('getTermsData', terms);
+        if (terms.length) {
+            TERMS = terms;
+            let termsList = [];
+            for (let term of terms) {
+                TERMS[term.term] = term;
+                termsList.push(term.term);
+            }
+            RE_TERMS = new RegExp(termsList.join('|'), 'g');
+        } else {
+            TERMS = null;
+            RE_TERMS = null;
+            TERMSLIST = null;
         }
     });
 }
-
 
 function getTerms() {
     let $container = $('.container');
@@ -101,7 +110,7 @@ function getTerms() {
 
     $terms.innerHTML =
 '    <dl class="terms-list"></dl>' +
-'    <form method="post" action="/api/terms">' +
+'    <form method="post">' +
 '      <fieldset>' +
 '        <legend>添加名词</legend>' +
 '        <div>' +
@@ -120,10 +129,54 @@ function getTerms() {
 
     $container.appendChild($terms);
 
-    let $termList = $('.terms dl');
-    for (let term of TERMS) {
-        $termList.innerHTML += `<dt>${term.term}</dt><dd>${term.explanation}</dd>`;
-    }
+    $terms.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        let term = $terms.querySelector('#term').value,
+            explanation = $terms.querySelector('#explanation').value;
+        // console.log(term, explanation);
+        if (TERMS && (term in TERMS)) {
+            let termData = TERMS[term];
+            $.put('/api/terms', {
+                termId: termData._id,
+                explanation: explanation
+            }).then(_ => {
+                // termData.$dd.textContent = explanation;
+                window.location.reload();
+            }).catch(err => {
+            });
+        } else {
+            $.post('/api/terms', {
+                term: term,
+                explanation: explanation
+            }).then(termData => {
+                // TERMS[term] = termData;
+                // let $dl = $terms.querySelector('dl');
+                // let $dt = document.createElement('dt');
+                // $dt.textContent = termData.term;
+                // let $dd = document.createElement('dd');
+                // $dd.textContent = termData.explanation;
+                // termData.$dd = $dd;
+                // $dl.appendChild($dt);
+                // $dl.appendChild($dd);
+                window.location.reload();
+            }).catch(err => {
+                console.log('commit terms', err);
+            });
+        }
+    });
+
+    let $dl = $terms.querySelector('dl');
+    if (TERMS)
+        for (let termData of TERMS) {
+            let $dt = document.createElement('dt');
+            $dt.textContent = termData.term;
+            let $dd = document.createElement('dd');
+            $dd.textContent = termData.explanation;
+            termData.$dd = $dd;
+            $dl.appendChild($dt);
+            $dl.appendChild($dd);
+        }
 }
 
 function getProjects() {

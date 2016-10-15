@@ -25,6 +25,8 @@ function baiduFanYi(query) {
         if ($fanyi) {
             $fanyi.textContent = result.trans_result[0].dst;
         }
+    }).catch(err => {
+
     });
 }
 

@@ -1,18 +1,7 @@
 "use strict";
 // jshint browser:true, devel: true
-/* globals $, $$, PROJECTID, FILEID, LINEID, baiduFanYi, KeyboardEvent */
+/* globals $, $$, PROJECTID, FILEID, LINEID, TERMS, RE_TERMS, baiduFanYi, KeyboardEvent */
 
-//
-// TODO
-//
-// [X] control+j/k 上下
-// [-] 自动选择
-// [X] sameGroup
-// [] 词典
-// [X] 自动翻译
-// [] 术语(快速添加)
-// [] URL hash跳转
-//
 
 
 function commitLine($line, text) {
@@ -28,6 +17,7 @@ function commitLine($line, text) {
             $line.classList.remove('committing');
             $line.classList.add('translated');
         }).catch(err => {
+            // TODO: 失败后延时重试
             let $transText = $line.querySelector('.line.translated .text');
             $transText.textContent = $line.dataset.transText;
             $line.classList.remove('committing');
@@ -35,25 +25,31 @@ function commitLine($line, text) {
 }
 
 function unselectLines(restore) {
+    console.log('unselectLines', restore);
+
     let $thats = $$('.line-wrapper.selected');
 
     for (let $that of $thats) {
-        let $transText = $that.querySelector('.line.translated .text');
-        let text = $that.querySelector('.input textarea').value;
-        text = text.trim();
-        if (restore || (! text))
-            text = $that.dataset.transText;
+        let $text = $that.querySelector('.line.original .text');
+        $text.textContent = $that.dataset.text;
+        $that.dataset.text = undefined;
 
-        $transText.textContent = text;
+        let $transText = $that.querySelector('.line.translated .text');
+        let transText = $that.querySelector('.input textarea').value;
+        transText = transText.trim();
+        if (restore || (! transText))
+            transText = $that.dataset.transText;
+
+        $transText.textContent = transText;
         $transText.classList.remove('input');
         $that.classList.remove('selected');
 
-        if ($that.dataset.transText !== text) {
+        if ($that.dataset.transText !== transText) {
             let speeker = $that.dataset.speeker;
             if (speeker) {
-                text = speeker + '　' + text;
+                transText = speeker + '　' + transText;
             }
-            commitLine($that, text);
+            commitLine($that, transText);
 
             let sameGroup = $that.dataset.sameGroup;
             // console.log(typeof sameGroup, sameGroup);
@@ -64,7 +60,7 @@ function unselectLines(restore) {
                         continue;
                     $line.classList.add('translated');
                     let $transText = $that.querySelector('.line.translated .text');
-                    $transText.textContent = text;
+                    $transText.textContent = transText;
                 }
             }
         }
@@ -103,6 +99,21 @@ function lineClick(event) {
 
     $this.classList.add('selected');
 
+    // 术语
+    let $text = $this.querySelector('.line.original .text');
+    let text = $text.textContent;
+    $this.dataset.text = text;
+    if (TERMS) {
+        let termedText = text.replace(RE_TERMS, term => {
+            term = TERMS[term];
+            return `<ruby class="term">${term.term}<rt>${term.explanation}</rt></ruby>`;
+        });
+        $text.innerHTML = termedText;
+    }
+    text = text.replace(/(「)|(」)|(\\n)/g, '');
+    baiduFanYi(text);
+
+    // 编辑器
     let $transText = $this.querySelector('.line.translated .text');
     let transText = $transText.textContent.trim();
 
@@ -144,12 +155,6 @@ function lineClick(event) {
     // } else if (transText.endsWith('」')) {
     //     $textarea.setSelectionRange(0, transText.length-1);
     // }
-
-    let $text = $this.querySelector('.line.original .text');
-    let query = $text.textContent;
-    query = query.replace(/(「)|(」)|(\\n)/g, '');
-    // console.log(query);
-    baiduFanYi(query);
 }
 
 function lineKeyPress(event) {
@@ -247,14 +252,24 @@ function getLineData() {
                 transText = line.transText ? line.transText : line.text;
             let speeker, tranSpeeker;
 
-            let matches = text.match(/(\S+)　+(\S*)/);
+            let matches = text.match(/^(\S{3})　+(.*)/);
             if (matches) {
                 speeker = tranSpeeker = matches[1];
                 text = matches[2];
+                if (TERMS && TERMS[tranSpeeker]) {
+                    tranSpeeker = TERMS[tranSpeeker].explanation;
+                }
             }
-            matches = transText.match(/(\S+)　+(\S*)/);
+
+            matches = transText.match(/^(\S{3})　+(.*)/);
             if (matches) {
                 transText = matches[2];
+            } else {
+                // HOT FIX!!
+                matches = transText.match(/^(Elmo|Helen)　+(.*)/);
+                if (matches) {
+                    transText = matches[2];
+                }
             }
 
             let lineWrapper = document.createElement('div');
