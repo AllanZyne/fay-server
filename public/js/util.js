@@ -18,7 +18,7 @@ function sendData(method, url, data) {
             return reject(err);
         };
         xhr.responseType = 'json';
-        xhr.send(data);
+        xhr.send(JSON.stringify(data));
     });
 }
 

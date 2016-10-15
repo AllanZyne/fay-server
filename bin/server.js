@@ -342,9 +342,13 @@ server.register([
             }
             let userId = user._id;
 
-            let payload = request.payload;
-            if (! payload)
-                return reply(Boom.badRequest('payload is empty'));
+            let payload;
+            try {
+                payload = JSON.parse(request.payload);
+            } catch (err) {
+                return reply(Boom.wrap(err));
+            }
+
             let term = payload.term, explanation = payload.explanation;
             if (! term)
                 return reply(Boom.badRequest('"term" is empty'));
@@ -368,15 +372,18 @@ server.register([
             }
             let userId = user._id;
 
-            let payload = request.payload;
-            if (! payload)
-                return reply(Boom.badRequest('payload is empty'));
+            let payload;
+            try {
+                payload = JSON.parse(request.payload);
+            } catch (err) {
+                return reply(Boom.wrap(err));
+            }
+
             let termId = payload.termId, explanation = payload.explanation;
             if (! termId)
                 return reply(Boom.badRequest('"termId" is empty'));
             if (! explanation)
                 return reply(Boom.badRequest('"explanation" is empty'));
-
             explanation = explanation.replace(/</g, '&lt;');
 
             // TODO: notify
