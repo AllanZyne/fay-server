@@ -488,7 +488,7 @@ server.register([
 
     server.route({
         method: 'POST',
-        path: '/api/project/{projectId}/file/{fileId}/transline/{lineId?}',
+        path: '/api/project/{projectId}/file/{fileId}/transline/{lineId}',
         handler: function(request, reply) {
             let user = request.auth.credentials;
             if (user.type > 1) {
@@ -506,7 +506,13 @@ server.register([
                 return reply(Boom.badRequest("lineId is wrong"));
 
             // XXXX: 检查是否有恶意代码！！
-            let text = request.payload;
+            let payload;
+            try {
+                payload = JSON.parse(request.payload);
+            } catch (err) {
+                return reply(Boom.wrap(err));
+            }
+            let text = payload.transText;
             if (typeof text !== 'string')
                 return reply(Boom.badRequest("payload data format is wrong"));
             text = text.replace(/</g, '&lt;');

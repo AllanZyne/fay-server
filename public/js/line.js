@@ -7,26 +7,24 @@
 function commitLine($line, text) {
     let lineIndex = $line.dataset.lineIndex;
 
-    // console.log('commitLine', lineIndex);
-    // console.log('commitLine', text);
+    // console.log(`commitLine [${lineIndex}] ${text}`);
 
     $line.classList.add('committing');
-    return $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${lineIndex}`, text)
-        .then(result => {
-            // console.log('commitLine result', result);
-            $line.classList.remove('committing');
-            $line.classList.add('translated');
-        }).catch(err => {
-            // TODO: 失败后延时重试
-            let $transText = $line.querySelector('.line.translated .text');
-            $transText.textContent = $line.dataset.transText;
-            $line.classList.remove('committing');
-        });
+    return $.post(`/api/project/${PROJECTID}/file/${FILEID}/transline/${lineIndex}`, {
+        transText: text
+    }).then(result => {
+        // console.log('commitLine result', result);
+        $line.classList.remove('committing');
+        $line.classList.add('translated');
+    }).catch(err => {
+        // TODO: 失败后延时重试
+        let $transText = $line.querySelector('.line.translated .text');
+        $transText.textContent = $line.dataset.transText;
+        $line.classList.remove('committing');
+    });
 }
 
 function unselectLines(restore) {
-    console.log('unselectLines', restore);
-
     let $thats = $$('.line-wrapper.selected');
 
     for (let $that of $thats) {
@@ -146,6 +144,7 @@ function lineClick(event) {
     $transText.appendChild($helper);
 
     $textarea.focus();
+
     // console.log('「', transText.startsWith('「'), transText.endsWith('」'));
     // if (transText.startsWith('「')) {
     //     if (transText.endsWith('」'))
@@ -240,7 +239,6 @@ function getLineData() {
         })
     ]).then(([lines]) => {
         // console.log('getLineData', lines);
-        // console.log('translines', translines);
 
         if (lines.length < LinePerPage) {
             LineEnd = true;
