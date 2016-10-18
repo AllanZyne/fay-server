@@ -28,6 +28,7 @@ body {
 
     font-family: "Microsoft YaHei";
     font-size: 14pt;
+    text-rendering: optimizeLegibility;
 }
 
 footer {
