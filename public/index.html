@@ -1,34 +1,71 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>fay0n</title>
-    <link rel="stylesheet" href="/assets/css/style.css">
-    <link rel="stylesheet" href="/assets/css/table.css">
-    <link rel="stylesheet" href="/assets/css/line.css">
-  </head>
-  <body lang="zh-CN">
-    <nav>
-      <div class="logo" id="path"></div>
-      <div class="user-pannel"><a id="notify"></a> <a id="username"></a> <a href="/logout">logout</a></div>
-    </nav>
-    <main>
-      <aside>
-        <section>
-          <ul>
-            <li><a href="#">正在翻译</a></li>
-            <li><a href="/terms">名词表</a></li>
-          </ul>
-        </section>
-      </aside>
-      <div class="container"></div>
-    </main>
-    <footer>Copyright © 1997-2013 <a href="www.fay0n.cc">Fay0n Ltd.</a></footer>
-    <script src="/assets/js/util.js"></script>
-    <script src="/assets/js/table.js"></script>
-    <script src="/assets/js/main.js"></script>
-    <script src="/assets/js/line.js"></script>
-    <script src="/assets/js/dict.js"></script>
-  </body>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>fay0n</title>
+<link href="css/bootstrap.min.css" rel="stylesheet">
+<link href="css/new-style.css" rel="stylesheet">
+</head>
+<body lang="zh-CN">
+
+<main>
+  
+  <div class="view" id="LoginView">
+    <form class="form login-form">
+      <input class="" type="text" name="email" autofocus="true" placeholder="username" required>
+      <input class="" type="password" name="password" placeholder="password" required>
+      <button class="" type="submit">login</button>
+    <form>
+  </div>
+
+  <div class="view" id="ProjectView">
+    <div class="proejct-container" v:foreach="projectsData">
+      <div class="project-card">
+        <div>{{title}}</div>
+        <div class="progress-bar">{{linesCount}}</div>
+        <div class="progress-bar">{{transCount}}</div>
+        <div class="progress-bar">{{locksCount}}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="view" id="LineEditorView">
+    <div class="line-article" v:foreach="linesData">
+      <div v:class="line-wrapper ${lock}:line-lock ${group}:line-group-${group}">
+        <div class="line-original">
+          <p class="line-speeker">{{speeker}}</p>
+          <p class="line-text">{{text}</p>
+        </div>
+        <div class="line-translate">
+          <p class="line-speeker">{{transSpeeker}}</p>
+          <div class="line-text">
+            <div class="panel panel-default line-editor">
+              <textarea>{{transText}}</textarea>
+              <div>
+                <div>
+                  <button id="reset-line" title="关闭(Esc)">&times;</button>
+                </div>
+                <div>
+                  <button id="prev-line" title="上一行(Ctrl+K)">&lt;</button>
+                  <button id="next-line" title="下一行(Ctrl+J)">&gt;</button>
+                </div>
+              </div>
+              <div>
+                <div class="fanyi"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/jquery-3.1.1.min.js"></script>
+  <script src="js/bootstrap.min.js"></script>
+</main>
+
+<footer>Copyright © 1997-2013 <a href="www.fay0n.cc">Fay0n Ltd.</a></footer>
+
+</body>
 </html>
