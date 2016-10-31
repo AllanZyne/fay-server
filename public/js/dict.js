@@ -7,20 +7,15 @@ document.addEventListener('mouseup', function(){
 }, false);
 
 function baiduFanYi(query) {
-    var appid = '20160708000024870';
-    var key = '2veGZCthLCu7exLViP9K';
-    var salt = (new Date()).getTime();
-    var sign = MD5(appid + query + salt + key);
-
-    return $.jsonp('http://api.fanyi.baidu.com/api/trans/vip/translate', {
+    // var appid = '20160708000024870';
+    // var key = '2veGZCthLCu7exLViP9K';
+    // var salt = (new Date()).getTime();
+    // var sign = MD5(appid + query + salt + key);
+    return $.get('/api/translate', {
         q: query,
-        appid: appid,
-        salt: salt,
         from: 'jp',
         to: 'zh',
-        sign: sign
     }).then(result => {
-        // console.log(result);
         let $fanyi = $('.fanyi');
         if ($fanyi) {
             $fanyi.textContent = result.trans_result[0].dst;

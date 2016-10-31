@@ -15,6 +15,7 @@ const database = require('../lib/database.js');
 const { async } = require('../lib/async.js');
 const config = require('../lib/config.js');
 // const { newToken, checkToken, updateToken, deleteToken } = require('../lib/token.js');
+const translate = require('../lib/translate.js');
 
 
 const appName = 'fay0n';
@@ -278,6 +279,16 @@ server.register([
             // options._id = request.payload.username;
 
             return reply(database.user_update(DB, userId, options));
+        }
+    });
+
+    // -------------------------------------------------------------------------
+
+    server.route({
+        method: 'GET',
+        path: '/api/translate',
+        handler: function(request, reply) {
+            return reply(translate(request.query));
         }
     });
 
