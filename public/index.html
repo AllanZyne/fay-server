@@ -21,12 +21,19 @@
 
   <div class="view" id="ProjectView">
     <div class="proejct-container" v:foreach="projectsData">
-      <div class="project-card">
-        <div>{{title}}</div>
-        <div class="progress-bar">{{linesCount}}</div>
-        <div class="progress-bar">{{transCount}}</div>
-        <div class="progress-bar">{{locksCount}}</div>
-      </div>
+
+        <div class="project-card thumbnail">
+            <img data-src="holder.js/300x300" alt="..." style="height: 100px;">
+            <div class="caption">{{title}}</div>
+            <div class="progress">
+                <div class="progress-bar progress-bar-success" style="width: 35%">
+                    <span class="sr-only">{{transCount/linesCount}} Complete</span>
+                </div>
+                <div class="progress-bar progress-bar-danger" style="width: 60%">
+                    <span class="sr-only">{{1 - transCount/linesCount}} Left</span>
+                </div>
+            </div>
+        </div>
     </div>
   </div>
 
