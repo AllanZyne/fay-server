@@ -1,0 +1,30 @@
+<div class="view" id="LineEditorView">
+  <div class="line-article" v:foreach="linesData">
+    <div v:class="line-wrapper ${lock}:line-lock ${group}:line-group-${group}">
+      <div class="line-original">
+        <p class="line-speeker">{{speeker}}</p>
+        <p class="line-text">{{text}</p>
+      </div>
+      <div class="line-translate">
+        <p class="line-speeker">{{transSpeeker}}</p>
+        <div class="line-text">
+          <div class="panel panel-default line-editor">
+            <textarea>{{transText}}</textarea>
+            <div>
+              <div>
+                <button id="reset-line" title="关闭(Esc)">&times;</button>
+              </div>
+              <div>
+                <button id="prev-line" title="上一行(Ctrl+K)">&lt;</button>
+                <button id="next-line" title="下一行(Ctrl+J)">&gt;</button>
+              </div>
+            </div>
+            <div>
+              <div class="fanyi"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

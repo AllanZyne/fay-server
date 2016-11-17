@@ -3,76 +3,57 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>fay0n</title>
-<link href="css/bootstrap.min.css" rel="stylesheet">
-<link href="css/new-style.css" rel="stylesheet">
+<style type="text/css">
+* {
+  box-sizing: border-box;
+}
+html, body {
+    height: 100vh;
+    margin: 0;
+}
+.frameset {
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: stretch;
+
+  height: 100vh;
+}
+.separator {
+  width: 5px;
+  background-color: rgb(208, 208, 208);
+}
+.frame {
+  outline: 1px black;
+
+  display: flex;
+  flex-flow: column nowrap;
+  align-items: stretch;
+
+  overflow-y: auto;
+}
+.frame > .menu {
+  flex-grow: 0;
+}
+.frame > .user-pannel {
+  outline: black;
+
+  flex-grow: 9999;
+
+  height: 200px;
+}
+</style>
 </head>
 <body lang="zh-CN">
-
-<main>
-  
-  <div class="view" id="LoginView">
-    <form class="form login-form">
-      <input class="" type="text" name="email" autofocus="true" placeholder="username" required>
-      <input class="" type="password" name="password" placeholder="password" required>
-      <button class="" type="submit">login</button>
-    <form>
+<div class="frameset">
+  <div class="frame" style="width: 230px;">
+    <div class="menu"></div>
+    <div class="user-pannel"></div>
   </div>
-
-  <div class="view" id="ProjectView">
-    <div class="proejct-container" v:foreach="projectsData">
-
-        <div class="project-card thumbnail">
-            <img data-src="holder.js/300x300" alt="..." style="height: 100px;">
-            <div class="caption">{{title}}</div>
-            <div class="progress">
-                <div class="progress-bar progress-bar-success" style="width: 35%">
-                    <span class="sr-only">{{transCount/linesCount}} Complete</span>
-                </div>
-                <div class="progress-bar progress-bar-danger" style="width: 60%">
-                    <span class="sr-only">{{1 - transCount/linesCount}} Left</span>
-                </div>
-            </div>
-        </div>
-    </div>
+  <div class="separator">
   </div>
-
-  <div class="view" id="LineEditorView">
-    <div class="line-article" v:foreach="linesData">
-      <div v:class="line-wrapper ${lock}:line-lock ${group}:line-group-${group}">
-        <div class="line-original">
-          <p class="line-speeker">{{speeker}}</p>
-          <p class="line-text">{{text}</p>
-        </div>
-        <div class="line-translate">
-          <p class="line-speeker">{{transSpeeker}}</p>
-          <div class="line-text">
-            <div class="panel panel-default line-editor">
-              <textarea>{{transText}}</textarea>
-              <div>
-                <div>
-                  <button id="reset-line" title="关闭(Esc)">&times;</button>
-                </div>
-                <div>
-                  <button id="prev-line" title="上一行(Ctrl+K)">&lt;</button>
-                  <button id="next-line" title="下一行(Ctrl+J)">&gt;</button>
-                </div>
-              </div>
-              <div>
-                <div class="fanyi"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <div class="frame">
+    xxxx
   </div>
-
-  <script src="js/jquery-3.1.1.min.js"></script>
-  <script src="js/bootstrap.min.js"></script>
-</main>
-
-<footer>Copyright © 1997-2013 <a href="www.fay0n.cc">Fay0n Ltd.</a></footer>
-
+</div>
 </body>
 </html>

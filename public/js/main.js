@@ -16,6 +16,7 @@ var PROJECTID, FILEID, LINEID;
 var TERMS, TERMSLIST, RE_TERMS, USER;
 
 
+
 function parseURL() {
     let pathname = window.location.pathname.split('/');
     PROJECTID = pathname[1];
@@ -32,6 +33,7 @@ function parseURL() {
 function changeURL(urlPath) {
     // window.history.replaceState({},"", urlPath);
     window.history.pushState({}, "", urlPath);
+
 }
 
 function getError(err) {
@@ -242,3 +244,7 @@ function getFiles() {
         $('main .container').appendChild(table.render());
     });
 }
+
+const fs = required('fs');
+
+fs.readFile();
