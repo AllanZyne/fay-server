@@ -288,14 +288,40 @@ function getLineData() {
             if (transText !== text)
                 lineWrapper.classList.add('translated');
 
-            lineWrapper.innerHTML = '<div class="line original">' +
-                (speeker ? `<p class="speeker">${speeker}</p>`:'') +
-                `<p class="text">${text}</p>` +
-            '</div>' +
-            '<div class="line translated">' +
-                (tranSpeeker ? `<p class="speeker">${tranSpeeker}</p>`:'') +
-                `<p class="text">${transText}</p>` +
-            '</div>';
+            let lineOriginal = document.createElement('div');
+            {
+                lineOriginal.classList.add('line');
+                lineOriginal.classList.add('original');
+                if (speeker) {
+                    let lineSpeeker = document.createElement('div');
+                    lineSpeeker.classList.add('speeker');
+                    lineSpeeker.textContent = speeker;
+                    lineOriginal.appendChild(lineSpeeker);
+                }
+                let lineText = document.createElement('div');
+                lineText.classList.add('text');
+                lineText.textContent = text;
+                lineOriginal.appendChild(lineText);
+            }
+
+            let lineTranslated = document.createElement('div');
+            {
+                lineTranslated.classList.add('line');
+                lineTranslated.classList.add('translated');
+                if (speeker) {
+                    let lineSpeeker = document.createElement('div');
+                    lineSpeeker.classList.add('speeker');
+                    lineSpeeker.textContent = tranSpeeker;
+                    lineTranslated.appendChild(lineSpeeker);
+                }
+                let lineText = document.createElement('div');
+                lineText.classList.add('text');
+                lineText.textContent = transText;
+                lineTranslated.appendChild(lineText);
+            }
+
+            lineWrapper.appendChild(lineOriginal);
+            lineWrapper.appendChild(lineTranslated);
 
             lineWrapper.addEventListener('click', lineClick);
 
