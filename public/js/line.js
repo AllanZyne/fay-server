@@ -250,7 +250,7 @@ function getLineData() {
                 transText = line.transText ? line.transText : line.text;
             let speeker, tranSpeeker;
 
-            let re_text = /^(Elmo|Helen|エルモ|ヘレン|タベル|ハラペ|ガスパ|コレッ|モニカ|サラ|オット|ヴァネ|交渉Ａ|交渉Ｂ|ブラン)　+(.*)/;
+            let re_text = /^(Elmo|Helen|ハム|チェリ|エルモ|ヘレン|タベル|ハラペ|ガスパ|コレッ|モニカ|サラ|オット|ヴァネ|交渉Ａ|交渉Ｂ|ブラン)　+(.*)/;
 
             let matches = text.match(re_text);
             if (matches) {
