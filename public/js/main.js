@@ -215,7 +215,7 @@ function getFiles() {
     $path.innerHTML = `<a href="/">/</a><a href="/${PROJECTID}">${PROJECTID}</a>`;
 
     return $.get(`/api/project/${PROJECTID}/file`, {}).then((data) => {
-        console.log('/api/project/file', data);
+        // console.log('/api/project/file', data);
 
         if (! data)
             data = [];
