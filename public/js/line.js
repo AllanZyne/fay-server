@@ -5,7 +5,7 @@
 
 
 function commitLine($line, text) {
-    let lineIndex = $line.dataset.lineIndex;
+    let lineIndex = $line.__$dataset.lineIndex;
 
     // console.log(`commitLine [${lineIndex}] ${text}`);
 
@@ -19,7 +19,7 @@ function commitLine($line, text) {
     }).catch(err => {
         // TODO: 失败后延时重试
         let $transText = $line.querySelector('.line.translated .text');
-        $transText.textContent = $line.dataset.transText;
+        $transText.textContent = $line.__$dataset.transText;
         $line.classList.remove('committing');
     });
 }
@@ -29,27 +29,27 @@ function unselectLines(restore) {
 
     for (let $that of $thats) {
         let $text = $that.querySelector('.line.original .text');
-        $text.textContent = $that.dataset.text;
-        $that.dataset.text = undefined;
+        $text.textContent = $that.__$dataset.text;
+        $that.__$dataset.text = undefined;
 
         let $transText = $that.querySelector('.line.translated .text');
         let transText = $that.querySelector('.input textarea').value;
         transText = transText.trim();
         if (restore || (! transText))
-            transText = $that.dataset.transText;
+            transText = $that.__$dataset.transText;
 
         $transText.textContent = transText;
         $transText.classList.remove('input');
         $that.classList.remove('selected');
 
-        if ($that.dataset.transText !== transText) {
-            let speeker = $that.dataset.speeker;
+        if ($that.__$dataset.transText !== transText) {
+            let speeker = $that.__$dataset.speeker;
             if (speeker) {
                 transText = speeker + '　' + transText;
             }
             commitLine($that, transText);
 
-            let sameGroup = $that.dataset.sameGroup;
+            let sameGroup = $that.__$dataset.sameGroup;
             // console.log(typeof sameGroup, sameGroup);
             if (sameGroup) {
                 let $sames = $$(`.line-wrapper.line-group-${sameGroup}`);
@@ -100,7 +100,7 @@ function lineClick(event) {
     // 术语
     let $text = $this.querySelector('.line.original .text');
     let text = $text.textContent;
-    $this.dataset.text = text;
+    $this.__$dataset.text = text;
     if (TERMS) {
         let termedText = text.replace(RE_TERMS, term => {
             term = TERMS[term];
@@ -115,7 +115,7 @@ function lineClick(event) {
     let $transText = $this.querySelector('.line.translated .text');
     let transText = $transText.textContent.trim();
 
-    $this.dataset.transText = transText;
+    $this.__$dataset.transText = transText;
 
     $transText.classList.add('input');
     $transText.innerHTML = '';
@@ -250,7 +250,9 @@ function getLineData() {
                 transText = line.transText ? line.transText : line.text;
             let speeker, tranSpeeker;
 
-            let matches = text.match(/^(\S{3})　+(.*)/);
+            let re_text = /^(Elmo|Helen|エルモ|ヘレン|タベル|ハラペ|ガスパ|コレッ|モニカ|サラ|オット|ヴァネ|交渉Ａ|交渉Ｂ|ブラン)　+(.*)/;
+
+            let matches = text.match(re_text);
             if (matches) {
                 speeker = tranSpeeker = matches[1];
                 text = matches[2];
@@ -259,27 +261,22 @@ function getLineData() {
                 }
             }
 
-            matches = transText.match(/^(\S{3})　+(.*)/);
+            matches = transText.match(re_text);
             if (matches) {
                 transText = matches[2];
-            } else {
-                // HOT FIX!!
-                matches = transText.match(/^(Elmo|Helen)　+(.*)/);
-                if (matches) {
-                    transText = matches[2];
-                }
             }
 
             let lineWrapper = document.createElement('div');
 
             lineWrapper.id = 'L'+LineIndex;
-            lineWrapper.dataset.lineIndex = LineIndex;
-            lineWrapper.dataset.lineId = line._id;
-            lineWrapper.dataset.speeker = speeker ? speeker : '';
-            lineWrapper.dataset.userId = line.userId;
-            lineWrapper.dataset.commitTime = line.time;
-            lineWrapper.dataset.edited = line.edited;
-            lineWrapper.dataset.sameGroup = line.sameGroup;
+            lineWrapper.__$dataset = {};
+            lineWrapper.__$dataset.lineIndex = LineIndex;
+            lineWrapper.__$dataset.lineId = line._id;
+            lineWrapper.__$dataset.speeker = speeker ? speeker : '';
+            lineWrapper.__$dataset.userId = line.userId;
+            lineWrapper.__$dataset.commitTime = line.time;
+            lineWrapper.__$dataset.edited = line.edited;
+            lineWrapper.__$dataset.sameGroup = line.sameGroup;
             LineIndex++;
 
             lineWrapper.classList.add('line-wrapper');
@@ -328,4 +325,3 @@ function getLines() {
     return getLineData();
 }
 
-// getLines();
