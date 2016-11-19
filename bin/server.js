@@ -20,8 +20,13 @@ const translate = require('../lib/translate.js');
 
 const appName = 'fay0n';
 
-const server = new hapi.Server();
-server.connection({ port: 3000 });
+const server = new hapi.Server({
+    cache: require('catbox-redis')
+});
+server.connection({
+    address: '127.0.0.1',
+    port: 3000
+});
 
 let DB = null;
 

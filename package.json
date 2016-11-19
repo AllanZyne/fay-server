@@ -1,6 +1,6 @@
 {
   "name": "hanz",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "A Simple Translation Server",
   "main": "bin/server.js",
   "scripts": {
@@ -8,10 +8,19 @@
     "start": "node ./bin/server.js"
   },
   "author": "Allan Zyne <allanzyne@outlook.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AllanZyne/fay0n.git"
+  },
+  "bugs": {
+    "url": "https://github.com/AllanZyne/fay0n/issues"
+  },
+  "homepage": "https://github.com/AllanZyne/fay0n#readme",
   "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.3.0",
     "boom": "^4.0.0",
+    "catbox-redis": "^2.0.2",
     "good": "^7.0.1",
     "good-console": "^6.1.2",
     "good-squeeze": "^4.0.0",
