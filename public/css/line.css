@@ -140,3 +140,32 @@ article {
     padding: 4px 16px;
     margin-left: 10px;
 }
+
+.fanyi {
+    font-size: 0.9em;
+    color: deeppink;
+}
+
+.fanyi > div {
+    padding: 2px;
+    border: 2px solid white;
+    /*cursor: pointer;*/
+    user-select: none;
+}
+
+.fanyi > div:hover {
+    background-color: rgba(128, 173, 255, 0.85);
+    border: 2px solid;
+    border-color: dodgerblue;
+}
+
+.fanyi .source {
+    width: 4em;
+    text-align: right;
+    display: inline-block;
+    padding-right: 0.6em;
+}
+
+/*.fanyi .source:after {
+    content: ':';
+}*/
