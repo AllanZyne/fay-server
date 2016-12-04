@@ -1,244 +1,304 @@
 "use strict";
-// jshint browser:true, devel: true
-/* globals $, getLines, MyTable */
 
+//
+(function View() {
+    var VmData = {
+        username: '',
+        projectName: '',
+        fileName: '',
+        notifyCount: 0,
+        transCount: 0,
+        locksCount: 0,
+        linesCount: 1,
+        recentFiles: [],
+        projectFiles: [],
+        lines: [],
+    };
 
-window.addEventListener("load", function () {
-    checkURL();
-});
-
-window.addEventListener("popstate", function () {
-    checkURL();
-});
-
-
-var PROJECTID, FILEID, LINEID;
-var TERMS, TERMSLIST, RE_TERMS, USER;
-
-
-function parseURL() {
-    let pathname = window.location.pathname.split('/');
-    PROJECTID = pathname[1];
-    FILEID = pathname[2];
-    LINEID = window.location.hash.slice(2);
-
-    console.log('parseURL', {
-        PROJECTID: PROJECTID,
-        FILEID: FILEID,
-        LINEID: LINEID
+    var vm = new Vue({
+        el: 'body',
+        data: VmData,
+        computed: {
+            untransCount() {
+                return this.linesCount - this.transCount;
+            },
+            locksPercent() {
+                return (this.locksCount/this.linesCount*100).toFixed(2);
+            },
+            transPercent() {
+                return (this.transCount/this.linesCount*100).toFixed(2);
+            },
+            untransPercent() {
+                return 100 - this.transPercent;
+            },
+        }
     });
-}
 
-function changeURL(urlPath) {
-    // window.history.replaceState({},"", urlPath);
-    window.history.pushState({}, "", urlPath);
-}
+    window.VmData = VmData;
+})();
 
-function getError(err) {
-    let $container = $('main .container');
-
-    console.log(err);
-
-    $container.innerHTML = `<div class="error">
-        <h3>错误请求</h3>
-        <pre>${JSON.stringify(err, null, 4)}</pre>
-    </div>`;
-}
-
-function checkURL() {
-    console.log('checkURL', window.location);
-
-    // XXXX: 404.html
-    parseURL();
-
-    getNav().catch(getError);
-
-    if (! PROJECTID) {
-        return getProjects().catch(getError);
+//
+(function Model() {
+    function getProject() {
+        return $.get('/api/project/AiryFairy');
     }
 
-    switch(PROJECTID) {
-        // case 'user':
-        //     return getUser();
-        case 'terms':
-            return getTermsData().then(getTerms).catch(getError);
-        default:
-            if (FILEID)
-                return getTermsData().then(getLines).catch(getError);
-            return getFiles().catch(getError);
+    function getFiles() {
+        return $.get(`/api/project/AiryFairy/file`);
     }
-}
 
-function getNav() {
-    return getUser();
-}
+    function getLines() {
+        return Promise.all([$.get(`/api/project/AiryFairy/file/ss527aa02.sjsx/line`, {
+            page: 0,
+            per_page: 30
+        })]).then(([lines]) => {
+            // console.log(lines);
+            for (let line of lines) {
+                // let line = lines[i];
+                let text = line.text,
+                    transText = line.transText ? line.transText : line.text;
+                let speeker, tranSpeeker;
+                let re_text = /^(Elmo|Helen|ハム|チェリ|エルモ|ヘレン|タベル|ハラペ|ガスパ|コレッ|モニカ|サラ|オット|ヴァネ|交渉Ａ|交渉Ｂ|ブラン)　+(.*)/;
 
-function getUser() {
-    return $.get('/api/user').then(user => {
-        console.log('/api/user', user);
-        USER = user;
-        $('#username').textContent = `${user._id}`;
-        $('#notify').textContent = `notify(${user.newNotify})`;
-    });
-}
+                let matches = text.match(re_text);
+                if (matches) {
+                    speeker = tranSpeeker = matches[1];
+                    text = matches[2];
+                }
 
-function getTermsData() {
-    return $.get('/api/terms').then(terms => {
-        console.log('getTermsData', terms);
-        if (terms.length) {
-            TERMS = terms;
-            let termsList = [];
-            for (let term of terms) {
-                TERMS[term.term] = term;
-                termsList.push(term.term);
+                matches = transText.match(re_text);
+                if (matches) {
+                    transText = matches[2];
+                }
+
+                line.speeker = speeker;
+                line.text = text;
+                line.transText = transText;
             }
-            RE_TERMS = new RegExp(termsList.join('|'), 'g');
-        } else {
-            TERMS = null;
-            RE_TERMS = null;
-            TERMSLIST = null;
-        }
-    });
-}
 
-function getTerms() {
-    let $container = $('.container');
-    $container.innerHTML = '';
+            return lines;
+        });
+    }
 
-    let $terms = document.createElement('div');
-    $terms.classList.add('terms');
+    function getUser() {
+        return $.get('/api/user');
+    }
 
-    $terms.innerHTML =
-'    <dl class="terms-list"></dl>' +
-'    <form method="post">' +
-'      <fieldset>' +
-'        <legend>添加名词</legend>' +
-'        <div>' +
-'          <label for="term">名词</label>' +
-'          <input type="text" id="term" name="term" required>' +
-'        </div>' +
-'        <div>' +
-'          <label for="explanation">解释</label>' +
-'          <textarea id="explanation" name="explanation" required></textarea>' +
-'        </div>' +
-'        <div>' +
-'          <input type="reset" value="重置" />' +
-'          <input type="submit" value="添加" />' +
-'        </div>' +
-'      </fieldset>';
+    window.Model = {
+        getProject: getProject,
+        getFiles: getFiles,
+        getLines: getLines,
+        getUser: getUser,
+    };
+})();
 
-    $container.appendChild($terms);
 
-    $terms.addEventListener('submit', function(event) {
-        event.preventDefault();
+(function Router() {
+    page('/', '/AiryFairy');
+    page('/:project/', refreshUser, index);
+    page('/:project/:file/', refreshUser, file);
+    page('/user', user);
+    page('/setting', user);
+    page('/statics', user);
+    // page('/logout', user);
+    page('/error', error);
+    page('*', notfound);
+    page();
 
-        let term = $terms.querySelector('#term').value,
-            explanation = $terms.querySelector('#explanation').value;
-        // console.log(term, explanation);
-        if (TERMS && (term in TERMS)) {
-            let termData = TERMS[term];
-            $.put('/api/terms', {
-                termId: termData._id,
-                explanation: explanation
-            }).then(_ => {
-                // termData.$dd.textContent = explanation;
-                window.location.reload();
-            }).catch(err => {
-            });
-        } else {
-            $.post('/api/terms', {
-                term: term,
-                explanation: explanation
-            }).then(termData => {
-                // TERMS[term] = termData;
-                // let $dl = $terms.querySelector('dl');
-                // let $dt = document.createElement('dt');
-                // $dt.textContent = termData.term;
-                // let $dd = document.createElement('dd');
-                // $dd.textContent = termData.explanation;
-                // termData.$dd = $dd;
-                // $dl.appendChild($dt);
-                // $dl.appendChild($dd);
-                window.location.reload();
-            }).catch(err => {
-                console.log('commit terms', err);
-            });
-        }
-    });
+    function refreshUser(context, next) {
+        Model.getUser().then(user => {
+            VmData.username = user._id;
+            VmData.notifyCount = user.newNotify;
+        });
+        next();
+    }
 
-    let $dl = $terms.querySelector('dl');
-    if (TERMS)
-        for (let termData of TERMS) {
-            let $dt = document.createElement('dt');
-            $dt.textContent = termData.term;
-            let $dd = document.createElement('dd');
-            $dd.textContent = termData.explanation;
-            termData.$dd = $dd;
-            $dl.appendChild($dt);
-            $dl.appendChild($dd);
-        }
-}
+    function index(context, next) {
 
-function getProjects() {
-    let $path = $('#path');
-    $path.innerHTML = `<a href="/">/</a>`;
+        Model.getProject().then(projects => {
+            let recentFiles = [];
 
-    return $.get('/api/project').then((data) => {
-        console.log('/api/project', data);
+            let hxxxFiles = [];
+            let commonFiles = [];
 
-        let table = new MyTable();
-        table.setColumns([
-            { name: '项目', key: 'name', href: '${row.name}'},
-            { name: '总段数', key: 'linesCount' },
-            { name: '已翻译', key: 'transCount' },
-            { name: '已锁定', key: 'locksCount' },
-            { name: '完成度', key: '${(row.transCount/row.linesCount*100).toFixed(2)}%'}
-        ]);
-        table.setData(data);
-        table.on('click', function(event) {
-            event.preventDefault();
-            let target = event.target;
-            if (target.tagName === 'A') {
-                changeURL(target.href);
-                checkURL();
+            for (let file of data) {
+                file.untransCount = file.linesCount - file.transCount;
+                file.transPercent = file.transCount/file.linesCount*100;
+                file.lastActivity = "未更新";
+                if ((file.untransCount != file.linesCount) && (file.untransCount > 20)) {
+                    recentFiles.push(file);
+                }
+
+                if (file.name[0] === 'h')
+                    hxxxFiles.push(file);
+                else
+                    commonFiles.push(file);
             }
+
+            let projectFiles = [];
+            projectFiles.push({ group: "COMMON"});
+            projectFiles = projectFiles.concat(commonFiles);
+            projectFiles.push({ group: "H-SCENCE"});
+            projectFiles  = projectFiles.concat(hxxxFiles);
+
+            VmData.projectFiles = projectFiles;
+            VmData.recentFiles = recentFiles;
+
+            VmData.projectName = projects[0].name;
+            VmData.locksCount = projects[0].locksCount;
+            VmData.transCount = projects[0].transCount;
+            VmData.linesCount = projects[0].linesCount;
         });
 
-        $('main .container').innerHTML = '';
-        $('main .container').appendChild(table.render());
-    });
-}
+        // Model.getFiles().then(files => {
+            // let recentFiles = [];
 
+            // let hxxxFiles = [];
+            // let commonFiles = [];
 
-function getFiles() {
-    let $path = $('#path');
-    $path.innerHTML = `<a href="/">/</a><a href="/${PROJECTID}">${PROJECTID}</a>`;
+            // for (let file of data) {
+            //     file.untransCount = file.linesCount - file.transCount;
+            //     file.transPercent = file.transCount/file.linesCount*100;
+            //     file.lastActivity = "未更新";
+            //     if ((file.untransCount != file.linesCount) && (file.untransCount > 20)) {
+            //         recentFiles.push(file);
+            //     }
 
-    return $.get(`/api/project/${PROJECTID}/file`, {}).then((data) => {
-        // console.log('/api/project/file', data);
+            //     if (file.name[0] === 'h')
+            //         hxxxFiles.push(file);
+            //     else
+            //         commonFiles.push(file);
+            // }
 
-        if (! data)
-            data = [];
+            // let projectFiles = [];
+            // projectFiles.push({ group: "COMMON"});
+            // projectFiles = projectFiles.concat(commonFiles);
+            // projectFiles.push({ group: "H-SCENCE"});
+            // projectFiles  = projectFiles.concat(hxxxFiles);
 
-        let table = new MyTable();
-        table.setColumns([
-            { name: '文件', key: 'name', href: PROJECTID + '/${row.name}'},
-            { name: '段数', key: 'linesCount' },
-            { name: '已翻译', key: 'transCount' },
-            { name: '已锁定', key: 'locksCount' },
-            { name: '完成度', key: '${(row.transCount/row.linesCount*100).toFixed(2)}%'}
-        ]);
-        table.setData(data);
-        table.on('click', function(event) {
-            event.preventDefault();
-            let target = event.target;
-            if (target.tagName === 'A') {
-                changeURL(target.href);
-                checkURL();
-            }
+            // VmData.projectFiles = projectFiles;
+            // VmData.recentFiles = recentFiles;
+        // });
+
+        Model.getLines().then(lines => {
+            lines[2].isEdit = true;
+            VmData.lines = lines;
         });
+    }
 
-        $('main .container').innerHTML = '';
-        $('main .container').appendChild(table.render());
-    });
-}
+    function file() {
+
+    }
+
+    function user() {
+        .then(user => {
+                    // console.log('/api/user', user);
+
+                });
+    }
+
+    function notfound() {
+
+    }
+
+    function error() {
+
+    }
+})();
+
+// function getTermsData() {
+//     return $.get('/api/terms').then(terms => {
+//         console.log('getTermsData', terms);
+//         if (terms.length) {
+//             TERMS = terms;
+//             let termsList = [];
+//             for (let term of terms) {
+//                 TERMS[term.term] = term;
+//                 termsList.push(term.term);
+//             }
+//             RE_TERMS = new RegExp(termsList.join('|'), 'g');
+//         } else {
+//             TERMS = null;
+//             RE_TERMS = null;
+//             TERMSLIST = null;
+//         }
+//     });
+// }
+
+// function getTerms() {
+//     let $container = $('.container');
+//     $container.innerHTML = '';
+
+//     let $terms = document.createElement('div');
+//     $terms.classList.add('terms');
+
+//     $terms.innerHTML =
+// '    <dl class="terms-list"></dl>' +
+// '    <form method="post">' +
+// '      <fieldset>' +
+// '        <legend>添加名词</legend>' +
+// '        <div>' +
+// '          <label for="term">名词</label>' +
+// '          <input type="text" id="term" name="term" required>' +
+// '        </div>' +
+// '        <div>' +
+// '          <label for="explanation">解释</label>' +
+// '          <textarea id="explanation" name="explanation" required></textarea>' +
+// '        </div>' +
+// '        <div>' +
+// '          <input type="reset" value="重置" />' +
+// '          <input type="submit" value="添加" />' +
+// '        </div>' +
+// '      </fieldset>';
+
+//     $container.appendChild($terms);
+
+//     $terms.addEventListener('submit', function(event) {
+//         event.preventDefault();
+
+//         let term = $terms.querySelector('#term').value,
+//             explanation = $terms.querySelector('#explanation').value;
+//         // console.log(term, explanation);
+//         if (TERMS && (term in TERMS)) {
+//             let termData = TERMS[term];
+//             $.put('/api/terms', {
+//                 termId: termData._id,
+//                 explanation: explanation
+//             }).then(_ => {
+//                 // termData.$dd.textContent = explanation;
+//                 window.location.reload();
+//             }).catch(err => {
+//             });
+//         } else {
+//             $.post('/api/terms', {
+//                 term: term,
+//                 explanation: explanation
+//             }).then(termData => {
+//                 // TERMS[term] = termData;
+//                 // let $dl = $terms.querySelector('dl');
+//                 // let $dt = document.createElement('dt');
+//                 // $dt.textContent = termData.term;
+//                 // let $dd = document.createElement('dd');
+//                 // $dd.textContent = termData.explanation;
+//                 // termData.$dd = $dd;
+//                 // $dl.appendChild($dt);
+//                 // $dl.appendChild($dd);
+//                 window.location.reload();
+//             }).catch(err => {
+//                 console.log('commit terms', err);
+//             });
+//         }
+//     });
+
+//     let $dl = $terms.querySelector('dl');
+//     if (TERMS)
+//         for (let termData of TERMS) {
+//             let $dt = document.createElement('dt');
+//             $dt.textContent = termData.term;
+//             let $dd = document.createElement('dd');
+//             $dd.textContent = termData.explanation;
+//             termData.$dd = $dd;
+//             $dl.appendChild($dt);
+//             $dl.appendChild($dd);
+//         }
+// }
