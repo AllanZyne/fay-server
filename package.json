@@ -28,6 +28,8 @@
     "hapi-auth-cookie": "^6.1.1",
     "hat": "^0.0.3",
     "inert": "^4.0.1",
-    "mongodb": "^2.1.8"
+    "lodash": "^4.17.4",
+    "mongodb": "^2.1.8",
+    "mysql2": "^1.1.2"
   }
 }

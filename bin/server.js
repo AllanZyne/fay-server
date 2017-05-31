@@ -11,7 +11,7 @@ const hapi_good = require('good');
 // const hapi_nes = require('nes');
 const Boom = require('boom');
 
-const database = require('../lib/database.js');
+const database = require('../lib/database_mysql.js');
 const { async } = require('../lib/async.js');
 const config = require('../lib/config.js');
 // const { newToken, checkToken, updateToken, deleteToken } = require('../lib/token.js');
@@ -447,10 +447,11 @@ server.register([
                 fileId = decodeURI(request.params.fileId),
                 options = request.query;
 
-            database.files_list(DB, projectId, fileId, options).then(
-                result => reply(result),
-                err    => reply(Boom.wrap(err))
-            );
+            if (fileId) {
+                reply(database.files_findOne(DB, projectId, fileId, options));
+            } else {
+                reply(database.files_list(DB, projectId, options));
+            }
         }
     });
 
@@ -538,9 +539,9 @@ server.register([
         }
     });
 
-    database.connect().then((db) => {
-        DB = db;
-        server.log('info', 'mongodb connected');
+    // database.connect().then((db) => {
+        // DB = db;
+        // server.log('info', 'mongodb connected');
 
         server.start((err) => {
             if (err) {
@@ -548,9 +549,9 @@ server.register([
             }
             server.log('info', 'Server running at: ' + server.info.uri);
         });
-    }).catch((err) => {
-        server.log('error', "mongodb can't connected !!");
-    });
+    // }).catch((err) => {
+    //     server.log('error', "mongodb can't connected !!");
+    // });
 
 });
 
