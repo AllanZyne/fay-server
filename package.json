@@ -1,5 +1,5 @@
 {
-  "name": "hanz",
+  "name": "fay-server",
   "version": "0.0.1",
   "description": "A Simple Translation Server",
   "main": "bin/server.js",
